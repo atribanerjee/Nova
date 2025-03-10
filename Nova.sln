@@ -5,6 +5,8 @@ VisualStudioVersion = 17.13.35825.156 d17.13
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nova.Web", "Nova.Web\Nova.Web.csproj", "{8442D603-F5B0-4F4C-BE6D-389DD980EBF4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nova.DB", "Nova.DB\Nova.DB.csproj", "{D857D011-FF97-43DE-9C67-96BEDF814AF0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{8442D603-F5B0-4F4C-BE6D-389DD980EBF4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8442D603-F5B0-4F4C-BE6D-389DD980EBF4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8442D603-F5B0-4F4C-BE6D-389DD980EBF4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D857D011-FF97-43DE-9C67-96BEDF814AF0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D857D011-FF97-43DE-9C67-96BEDF814AF0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D857D011-FF97-43DE-9C67-96BEDF814AF0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D857D011-FF97-43DE-9C67-96BEDF814AF0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

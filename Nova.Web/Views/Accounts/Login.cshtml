@@ -1,6 +1,4 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿
 @{
     Layout = null;
 }
@@ -53,15 +51,15 @@
                         <div class="login-main">
                             <form class="theme-form">
                                 <h3>Sign in to account</h3>
-                                <p>Enter your email & password to login</p>
+                                <p>Enter your username & password to login</p>
                                 <div class="form-group">
-                                    <label class="col-form-label">Email Address</label>
-                                    <input class="form-control" type="email" required="" placeholder="Test@gmail.com">
+                                    <label class="col-form-label">Username</label>
+                                    <input class="form-control" type="text" required="" placeholder="Username" autocomplete="off" />
                                 </div>
                                 <div class="form-group">
                                     <label class="col-form-label">Password</label>
                                     <div class="form-input position-relative">
-                                        <input class="form-control" type="password" name="login[password]" required="" placeholder="*********">
+                                        <input class="form-control" type="password" name="login[password]" required="" placeholder="*********" autocomplete="off" />
                                         <div class="show-hide"><span class="show">                         </span></div>
                                     </div>
                                 </div>
