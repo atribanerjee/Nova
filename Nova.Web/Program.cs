@@ -1,4 +1,12 @@
+using Microsoft.EntityFrameworkCore;
+using Nova.DB;
+
 var builder = WebApplication.CreateBuilder(args);
+
+// Configure DbContext with connection string
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+builder.Services.AddDbContext<NovaDBContext>(options =>
+    options.UseSqlServer(connectionString));
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
