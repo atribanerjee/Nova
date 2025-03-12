@@ -1,14 +1,18 @@
 ﻿using Nova.DB;
+using Nova.DB.Utitlity;
 using Nova.Web.Models;
+using Nova.Web.Utitlity;
 
 namespace Nova.Web.Controllers
 {
     public class UserService:IUserService
     {
         public Nova.DB.NovaDBContext _Db;
-        public UserService(NovaDBContext Db)
+        private IUtilityService _Utility;
+        public UserService(NovaDBContext Db, IUtilityService Uti)
         {
             _Db = Db;
+            _Utility = Uti;
         }
         public async Task<UserViewModel>  logins(UserViewModel model)
         {
@@ -16,10 +20,10 @@ namespace Nova.Web.Controllers
 
             UserViewModel UVM = new UserViewModel();
 
-           // string password = new UtilityHelper().sha256encription(model.password);
+            string password =await _Utility.sha256encription(model.Password);
             UVM = (from u in _Db.Users
-                              where u.Username == model.Username && u.Password == model.Password
-                              select new UserViewModel
+                              where u.Username == model.Username && u.Password == password
+                   select new UserViewModel
                               {
                                   Id = u.Id,
                                   Username = u.Username ?? string.Empty,
@@ -32,8 +36,9 @@ namespace Nova.Web.Controllers
             if (UVM != null && UVM.Id > 0)
             {
                 result = true;
-                //new UtilityHelper().SetSessionValue("LoggedInUserID", userloginmodel.id);
-                //new UtilityHelper().SetSessionValue("LoggedInUserName", userloginmodel.username);
+                _Utility.SetSessionValue("LoggedInUserID", UVM.Id);
+                _Utility.SetSessionValue("LoggedInUserName", UVM.Username);
+                
 
                 return UVM;
             }

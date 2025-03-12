@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Nova.DB;
+using Nova.DB.Utitlity;
 using Nova.Web.Controllers;
+using Nova.Web.Utitlity;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,6 +14,8 @@ builder.Services.AddDbContext<NovaDBContext>(options =>
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IUtilityService, UtilityHelper>();
+
 
 var app = builder.Build();
 
