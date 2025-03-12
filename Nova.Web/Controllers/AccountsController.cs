@@ -22,6 +22,7 @@ namespace Nova.Web.Controllers
             var data = await _db.Roles.ToListAsync();
             return View();
         }
+        [ValidateAntiForgeryToken]
         [HttpPost]
         public async Task<IActionResult> Login([FromForm] UserViewModel model)
         {

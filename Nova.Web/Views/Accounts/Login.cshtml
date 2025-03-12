@@ -1,8 +1,8 @@
 ﻿@model Nova.Web.Models.UserViewModel
 
 @{
-   
-    Layout = "~/Views/Shared/_Layout.cshtml";
+    Layout = null;
+    /// Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
 <!DOCTYPE html>
@@ -51,41 +51,37 @@
                     <div>
                         <div><a class="logo text-start" href="index.html"><img class="img-fluid for-light" src="@Url.Content("~/assets/images/logo/logo.png")" alt="looginpage" /></a></div>
                         <div class="login-main">
-                            <form class="theme-form">
-                                @using (Html.BeginForm("Login", "Accounts", FormMethod.Post, new { @class = "mb-3", @id = "frmLogin" }))
-                                {
-                                    <h3>Sign in to account</h3>
-                                    <p>Enter your username & password to login</p>
-                                    <div class="form-group">
-                                        <label class="col-form-label">Username</label>
-                                        @Html.TextBoxFor(m => m.Username, new { @class = "form-control", @placeholder = "User Name" })
-                                        @Html.ValidationMessageFor(m => m.Username, "", new { @class = "text-danger" })
-                                       @*  <input class="form-control" type="text" required="" placeholder="Username" autocomplete="off" /> *@
+
+                            <form asp-action="Login" asp-controller="Accounts" method="POST" data-ajax="true" data-ajax-update="result" asp-antiforgery="true">
+                                <h3>Sign in to account</h3>
+                                <p>Enter your username & password to login</p>
+                                <div class="form-group">
+                                    <label class="col-form-label">Username</label>
+                                    @Html.TextBoxFor(m => m.Username, new { @class = "form-control", @placeholder = "Username", @autocomplete="off" })
+                                    @Html.ValidationMessageFor(m => m.Username, "", new { @class = "text-danger" })
+
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-form-label">Password</label>
+                                    <div class="form-input position-relative">
+                                        @Html.PasswordFor(m => m.Password, new { @class = "form-control ", @placeholder = "Password", @autocomplete = "off" })
+                                        @Html.ValidationMessageFor(m => m.Password, "", new { @class = "text-danger" })
                                     </div>
-                                    <div class="form-group">
-                                        <label class="col-form-label">Password</label>
-                                        <div class="form-input position-relative">
-                                            @Html.PasswordFor(m => m.Password, new { @class = "form-control ", @placeholder = "Password" })
-                                            @Html.ValidationMessageFor(m => m.Password, "", new { @class = "text-danger" })
-                                            @* <input class="form-control" type="password" name="login[password]" required="" placeholder="*********" autocomplete="off" />
-                                            <div class="show-hide"><span class="show">                         </span></div> *@
-                                        </div>
+                                </div>
+                                <div class="form-group mb-0">
+                                    <div class="checkbox p-0">
+                                        <input id="checkbox1" type="checkbox">
+                                        <label class="text-muted" for="checkbox1">Remember password</label>
                                     </div>
-                                    <div class="form-group mb-0">
-                                        <div class="checkbox p-0">
-                                            <input id="checkbox1" type="checkbox">
-                                            <label class="text-muted" for="checkbox1">Remember password</label>
-                                        </div>
-                                        <button class="btn btn-primary btn-block w-100" type="submit">Sign in</button>
-                                       
-                                    </div>
-                                    <h6 class="text-muted mt-4 or">Or Sign in with</h6>
-                                    <div class="social mt-4">
-                                        <div class="btn-showcase"><a class="btn btn-light" href="https://www.linkedin.com/login" target="_blank"><i class="txt-linkedin" data-feather="linkedin"></i> LinkedIn </a><a class="btn btn-light" href="https://twitter.com/login?lang=en" target="_blank"><i class="txt-twitter" data-feather="twitter"></i>twitter</a><a class="btn btn-light" href="https://www.facebook.com/" target="_blank"><i class="txt-fb" data-feather="facebook"></i>facebook</a></div>
-                                    </div>
-                                    <p class="mt-4 mb-0 text-center">Don't have account?<a class="ms-2" href="sign-up.html">Create Account</a></p>
-                                }
+                                    <button class="btn btn-primary btn-block w-100" type="submit">Sign in</button>
+                                </div>
+                                <h6 class="text-muted mt-4 or">Or Sign in with</h6>
+                                <div class="social mt-4">
+                                    <div class="btn-showcase"><a class="btn btn-light" href="https://www.linkedin.com/login" target="_blank"><i class="txt-linkedin" data-feather="linkedin"></i> LinkedIn </a><a class="btn btn-light" href="https://twitter.com/login?lang=en" target="_blank"><i class="txt-twitter" data-feather="twitter"></i>twitter</a><a class="btn btn-light" href="https://www.facebook.com/" target="_blank"><i class="txt-fb" data-feather="facebook"></i>facebook</a></div>
+                                </div>
+                                <p class="mt-4 mb-0 text-center">Don't have account?<a class="ms-2" href="sign-up.html">Create Account</a></p>
                             </form>
+
                         </div>
                     </div>
                 </div>
@@ -106,7 +102,36 @@
         <!-- Theme js-->
         <script src="@Url.Content("~/assets/js/script.js")"></script>
         <!-- Plugin used-->
-      
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-ajax-unobtrusive/3.2.6/jquery.unobtrusive-ajax.js" integrity="sha256-v2nySZafnswY87um3ymbg7p9f766IQspC5oqaqZVX2c=" crossorigin="anonymous"></script>
+        <script>
+            document.getElementById('frmLogin').addEventListener('submit', async function (e) {
+                e.preventDefault(); // Prevent the default form submission
+
+                const form = e.target;
+                const formData = new FormData(form);
+
+                try {
+                    const response = await fetch(form.action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
+
+                    if (response.ok) {
+                        const result = await response.json();
+                        // Handle success response
+                        console.log('Login successful', result);
+                    } else {
+                        // Handle error response
+                        console.log('Login failed', response.statusText);
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                }
+            });
+        </script>
     </div>
 </body>
 </html>
