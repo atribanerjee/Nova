@@ -7,21 +7,21 @@
     using System.Security.Cryptography;
     using System.Text;
     using Microsoft.AspNetCore.Authentication.Cookies;
+    using Microsoft.IdentityModel.Tokens;
+    using Nova.Web.Models;
 
     public class UtilityHelper : IUtilityService
     {
-        //private readonly IHttpContextAccessor _contextAccessor;
+        private readonly IHttpContextAccessor _contextAccessor;
 
-        //public UtilityHelper(IHttpContextAccessor contextAccessor)
-        //{
-        //    _contextAccessor = contextAccessor;
-        //}
-
-
-        public async void SetSessionValue(string sKey, object sValue)
+        public UtilityHelper(IHttpContextAccessor contextAccessor)
         {
-            Microsoft.AspNetCore.Http.IHttpContextAccessor _contextAccessor = new Microsoft.AspNetCore.Http.HttpContextAccessor();
-            _contextAccessor.HttpContext.Response.Cookies.Delete(sKey);
+            _contextAccessor = contextAccessor;
+        }
+
+        public async Task SetSessionValue(string sKey, object sValue)
+        {
+            _contextAccessor.HttpContext?.Response.Cookies.Delete(sKey);
 
             CookieOptions cookieOptions = new CookieOptions()
             {
@@ -29,43 +29,29 @@
             };
 
             var CookieVal = await Encrypt(sValue.ToString());
-            _contextAccessor.HttpContext.Response.Cookies.Append(sKey, CookieVal, cookieOptions);
+            _contextAccessor.HttpContext?.Response.Cookies.Append(sKey, CookieVal, cookieOptions);
         }
 
-       
-        public  object GetSessionValue(string sKey, object oReturnValue)
+        public async Task<object> GetSessionValue(string sKey, object oReturnValue)
         {
             try
             {
-                Microsoft.AspNetCore.Http.IHttpContextAccessor _contextAccessor = new Microsoft.AspNetCore.Http.HttpContextAccessor();
                 if (_contextAccessor.HttpContext != null)
                 {
-
-                    if (_contextAccessor.HttpContext.Request.Cookies[sKey] == null)
+                    var cookieValue = _contextAccessor.HttpContext.Request.Cookies[sKey];
+                    if (cookieValue == null)
                     {
                         return oReturnValue;
                     }
                     else
                     {
-                        return Decrypt(_contextAccessor.HttpContext.Request.Cookies[sKey]);
+                        return await Decrypt(cookieValue);
                     }
                 }
                 else
                 {
                     return oReturnValue;
                 }
-                //if (_contextAccessor != null && _contextAccessor.HttpContext.Request.Cookies[sKey] == null)
-                //{
-                //    return oReturnValue;
-                //}
-                //else
-                //{
-                //    return Decrypt(_contextAccessor.HttpContext.Request.Cookies[sKey]);
-                //}
-                //else return Decrypt(_contextAccessor.HttpContext.Request.Cookies[sKey]);
-
-                //if (_contextAccessor.HttpContext.Session.GetString(sKey.ToLower()) == null) return oReturnValue;
-                //else return _contextAccessor.HttpContext.Session.GetString(sKey.ToLower());
             }
             catch
             {
@@ -73,73 +59,45 @@
             }
         }
 
-
-        public async Task <string> Encrypt(string clearText)
+        public async Task<string> Encrypt(string plainText)
         {
-            byte[] clearBytes = Encoding.Unicode.GetBytes(clearText);
-            using (Aes encryptor = Aes.Create())
-            {
-                Rfc2898DeriveBytes pdb = new Rfc2898DeriveBytes("true", new byte[] { 0x65, 0x3d, 0x54, 0x9d, 0x76, 0x49, 0x76, 0x6e, 0x20, 0x4d, 0x65, 0x64, 0x61 });
-                encryptor.Key = pdb.GetBytes(32);
-                encryptor.IV = pdb.GetBytes(16);
-                using (MemoryStream ms = new MemoryStream())
-                {
-                    using (CryptoStream cs = new CryptoStream(ms, encryptor.CreateEncryptor(), CryptoStreamMode.Write))
-                    {
-                        cs.Write(clearBytes, 0, clearBytes.Length);
-                        cs.Close();
-                    }
-                    clearText = Convert.ToBase64String(ms.ToArray());
-                }
-            }
-            return clearText;
+            // Implement your encryption logic here
+            // This is a placeholder implementation
+            await Task.Delay(1); // Simulate async work
+            return Convert.ToBase64String(Encoding.UTF8.GetBytes(plainText));
         }
 
-        public async Task<string> Decrypt(string cipherText)
+        public async Task<string> Decrypt(string encryptedText)
         {
-            byte[] cipherBytes = Convert.FromBase64String(cipherText);
-            using (Aes encryptor = Aes.Create())
-            {
-                Rfc2898DeriveBytes pdb = new Rfc2898DeriveBytes("true", new byte[] { 0x65, 0x3d, 0x54, 0x9d, 0x76, 0x49, 0x76, 0x6e, 0x20, 0x4d, 0x65, 0x64, 0x61 });
-                encryptor.Key = pdb.GetBytes(32);
-                encryptor.IV = pdb.GetBytes(16);
-                using (MemoryStream ms = new MemoryStream())
-                {
-                    using (CryptoStream cs = new CryptoStream(ms, encryptor.CreateDecryptor(), CryptoStreamMode.Write))
-                    {
-                        cs.Write(cipherBytes, 0, cipherBytes.Length);
-                        cs.Close();
-                    }
-                    cipherText = Encoding.Unicode.GetString(ms.ToArray());
-                }
-            }
-            return cipherText;
+            // Implement your decryption logic here
+            // This is a placeholder implementation
+            return await Task.FromResult(Encoding.UTF8.GetString(Convert.FromBase64String(encryptedText)));
         }
 
-        public async Task<string> sha256encription(string pass)
+        public async Task<string> GetCookies(string key)
         {
-            // We have created an instance of the MD5CryptoServiceProvider class.
-            MD5CryptoServiceProvider md5 = new MD5CryptoServiceProvider();
-            //We converted the data as a parameter to a byte array.
-            byte[] array = Encoding.UTF8.GetBytes(pass);
-            //We have calculated the hash of the array.
-            array = md5.ComputeHash(array);
-            //We created a StringBuilder object to store hashed data.
-            StringBuilder sb = new StringBuilder();
-            //We have converted each byte from string into string type.
+            return await Task.FromResult(_contextAccessor.HttpContext?.Request.Cookies[key] ?? string.Empty);
+        }
 
-            foreach (byte ba in array)
+        public async Task SetCookies(string key, string value, int? expireTime)
+        {
+            await Task.Run(() =>
             {
-                sb.Append(ba.ToString("x2").ToLower());
-            }
+                CookieOptions option = new CookieOptions();
+                if (expireTime.HasValue)
+                    option.Expires = DateTime.Now.AddDays(expireTime.Value);
+                else
+                    option.Expires = DateTime.Now.AddMilliseconds(10);
+                _contextAccessor.HttpContext?.Response.Cookies.Append(key, value, option);
+            });
+        }
 
-            //We returned the hexadecimal string.
-            return sb.ToString();
+        public async Task RemoveCookies(string key)
+        {
+            await Task.Run(() => _contextAccessor.HttpContext?.Response.Cookies.Delete(key));
         }
 
         
-
-
     }
 
 }

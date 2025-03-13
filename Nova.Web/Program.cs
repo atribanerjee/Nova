@@ -15,7 +15,7 @@ builder.Services.AddDbContext<NovaDBContext>(options =>
 builder.Services.AddControllersWithViews();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IUtilityService, UtilityHelper>();
-
+builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
 

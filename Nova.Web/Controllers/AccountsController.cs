@@ -49,65 +49,39 @@ namespace Nova.Web.Controllers
                 UVM = await _Service.logins(model);
                 if (model.RememberMe)
                 {
-                    Set("NovaLogin", model.Username, 30);
+                    await _Utility.SetCookies("NovaLogin", model.Username, 30);
                 }
                 else
                 {
-                    Remove("NovaLogin");
+                    await _Utility.RemoveCookies("NovaLogin");
                 }
 
 
             }
-          
-           return RedirectToAction("Index", "Home");
+            return Json(new { url = Url.Action("Index", "Home") });
            
         }
 
-        public void ClearCookies()
-        {
-            Remove("LoggedInUserID");
-            Remove("LoggedInUserName");
-        }
-        public string Get(string key)
-        {
-            return Request.Cookies[key];
-        }
-        /// <summary>  
-        /// set the cookie  
-        /// </summary>  
-        /// <param name="key">key (unique indentifier)</param>  
-        /// <param name="value">value to store in cookie object</param>  
-        /// <param name="expireTime">expiration time</param>  
-        public void Set(string key, string value, int? expireTime)
-        {
-            CookieOptions option = new CookieOptions();
-            if (expireTime.HasValue)
-                option.Expires = DateTime.Now.AddDays(expireTime.Value);
-            else
-                option.Expires = DateTime.Now.AddMilliseconds(10);
-            Response.Cookies.Append(key, value, option);
-        }
-        /// <summary>  
-        /// Delete the key  
-        /// </summary>  
-        /// <param name="key">Key</param>  
-        public void Remove(string key)
-        {
-            Response.Cookies.Delete(key);
-        }
 
-        public ActionResult LogOut()
-        {
-            HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
 
-            _Utility.SetSessionValue("LoggedInUserID", 0);
-            _Utility.SetSessionValue("LoggedInUserName", String.Empty);
+
+        public async Task<IActionResult> LogOut()
+        {
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+
+            await _Utility.SetSessionValue("LoggedInUserID", 0);
+            await _Utility.SetSessionValue("LoggedInUserName", String.Empty);
             // HttpContext.Session.Clear();
-            ClearCookies();   // CLEAR COOKIES AFTER LOGOUT
+            await ClearCookies();   // CLEAR COOKIES AFTER LOGOUT
 
             return RedirectToAction("LogIn", "Accounts");
         }
-       
+        public async Task ClearCookies()
+        {
+            await _Utility.RemoveCookies("LoggedInUserID");
+            await _Utility.RemoveCookies("LoggedInUserName");
+        }
+
         private void RemoveModelStateItem(String data)
         {
             try
