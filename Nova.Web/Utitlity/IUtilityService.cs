@@ -13,6 +13,7 @@ namespace Nova.Web.Utitlity
         public Task SetCookies(string key, string value, int? expireTime);
         public Task RemoveCookies(string key);
 
+        public Task<bool> SendEmailAsync(string subject, string email, string htmlMessage, String name, Dictionary<string, string> objDict);
         //  public Task<string> sha256encription(string pass);
 
 

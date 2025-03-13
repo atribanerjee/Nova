@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using Nova.DB;
 using Nova.DB.Utitlity;
@@ -16,6 +17,14 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IUtilityService, UtilityHelper>();
 builder.Services.AddHttpContextAccessor();
+
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/Accounts/Login";
+        options.LogoutPath = "/Accounts/LogOut";
+        options.ExpireTimeSpan = TimeSpan.FromDays(30); // Set default expiration time
+    });
 
 var app = builder.Build();
 

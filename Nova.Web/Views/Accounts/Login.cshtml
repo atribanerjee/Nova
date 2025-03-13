@@ -42,6 +42,49 @@
     <link rel="stylesheet" type="text/css" href="@Url.Content("~/assets/css/responsive.css")">
 </head>
 <body>
+
+    <div class="toast-container position-fixed top-0 end-0 p-3">
+        <div id="liveToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <strong class="me-auto">Alert</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body">
+                Invalid username or password
+            </div>
+        </div>
+    </div>
+
+
+    <form asp-action="ForgetPassword" asp-controller="Accounts" method="POST" data-ajax="true" data-ajax-update="result" asp-antiforgery="true" data-ajax-success="success">
+        {
+        <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-sm">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="exampleModalLabel">Forgot Password</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Enter your e-mail address below to reset your password.</p>
+                        @Html.TextBoxFor(m => m.Email, new { @class = "form-control", @placeholder = "Email Address", @autofocus = "" })
+                        <span class="text-danger"> @Html.ValidationMessageFor(m => m.Email)</span>
+                    </div>
+                    <div class="modal-footer">
+                        <button data-dismiss="modal" class="btn btn-default" type="button">Cancel</button>
+                        <button id="btnReset" class="btn btn-success" type="submit">Submit</button>
+                    </div>
+                    @*   <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary">Save changes</button>
+            </div> *@
+                </div>
+            </div>
+        </div>
+        }
+    </form>
+
+
     <!-- login page start-->
     <div class="container-fluid">
         <div class="row">
@@ -57,7 +100,7 @@
                                 <p>Enter your username & password to login</p>
                                 <div class="form-group">
                                     <label class="col-form-label">Username</label>
-                                    @Html.TextBoxFor(m => m.Username, new { @class = "form-control", @placeholder = "Username", @autocomplete="off" })
+                                    @Html.TextBoxFor(m => m.Username, new { @class = "form-control", @placeholder = "Username", @autocomplete = "off" })
                                     @Html.ValidationMessageFor(m => m.Username, "", new { @class = "text-danger" })
 
                                 </div>
@@ -74,7 +117,9 @@
                                         <label class="custom-control-label" for="checkbox1">Remember password</label>
                                     </div>
                                     <button class="btn btn-primary btn-block w-100" type="submit">Sign in</button>
+                                    <button type="button" id="ShowModal" class="btn btn-link" data-bs-toggle="modal" data-bs-target="#exampleModal">Forget Password</button>
                                 </div>
+
                                 <h6 class="text-muted mt-4 or">Or Sign in with</h6>
                                 <div class="social mt-4">
                                     <div class="btn-showcase"><a class="btn btn-light" href="https://www.linkedin.com/login" target="_blank"><i class="txt-linkedin" data-feather="linkedin"></i> LinkedIn </a><a class="btn btn-light" href="https://twitter.com/login?lang=en" target="_blank"><i class="txt-twitter" data-feather="twitter"></i>twitter</a><a class="btn btn-light" href="https://www.facebook.com/" target="_blank"><i class="txt-fb" data-feather="facebook"></i>facebook</a></div>
@@ -107,6 +152,34 @@
                   success = function (result) {
                 window.location.href = result.url;
             };
+
+                    $('#liveToast').show('toast');
+            $("#ShowModal").click(function () {
+                $('#exampleModal').modal('show');
+            });
+
+            $("#btnReset").click(function () {
+                $.ajax({
+                    url: "/LogIn/ForgotPassword",
+
+                    contentType: "application/json",
+                    dataType: "json",
+                    type: "Post",
+                    headers: {
+
+                    }
+                }).done(function (data) {
+                    $("#modalcomments").modal('hide');
+                    viewModel.get("comments").read();
+                    (<HTMLFormElement>frmComment[0]).reset();
+                    alert('hell');
+                }).fail(function (jqXHR, textStatus) {
+                    Ephron.WebApp.Common.showFinanceAlert("Something went wrong while submitting your request , Please enter comments.");
+                }).always(function () {
+
+                });
+            });
+
         </script>
     </div>
 </body>

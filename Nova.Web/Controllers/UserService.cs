@@ -1,4 +1,5 @@
-﻿using Nova.DB;
+﻿using Microsoft.EntityFrameworkCore;
+using Nova.DB;
 using Nova.DB.Utitlity;
 using Nova.Web.Models;
 using Nova.Web.Utitlity;
@@ -29,6 +30,7 @@ namespace Nova.Web.Controllers
                        Lastname = u.Lastname ?? string.Empty,
                        Email = u.Email ?? string.Empty,
                        RoleId = u.RoleId,
+                       Password= model.Password
                    }).FirstOrDefault() ?? new UserViewModel();
 
             if (UVM != null && UVM.Id > 0)
@@ -51,29 +53,107 @@ namespace Nova.Web.Controllers
            
         }
 
-        //public async Task<UserViewModel> Register(UserViewModel model)
-        //{
-        //    UserViewModel UVM = new UserViewModel();
-        //    Users user = new Users();
-        //    user.Firstname = model.Firstname;
-        //    user.Lastname = model.Lastname;
-        //    user.Username = model.Username;
-        //    user.Password = await _Utility.Encrypt(model.Password);
-        //    user.Email = model.Email;
-        //    user.RoleId = model.RoleId;
-        //    user.CreatedDate = DateTime.Now;
-        //    user.CreatedBy = 1;
-        //    user.IsActive = true;
-        //    user.IsDeleted = false;
-        //    _Db.Users.Add(user);
-        //    await _Db.SaveChangesAsync();
-        //    UVM.Id = user.Id;
-        //    UVM.Firstname = user.Firstname;
-        //    UVM.Lastname = user.Lastname;
-        //    UVM.Username = user.Username;
-        //    UVM.Email = user.Email;
-        //    UVM.RoleId = user.RoleId;
-        //    return UVM;
-        //}
+        public async Task<UserViewModel> CheckEmailIDExit(string EmailID)
+        {
+            UserViewModel UVM = new UserViewModel();
+            try
+            {
+                UVM = await Task.Run(() =>
+                {
+                    return (from u in _Db.Users
+                            where u.Email.ToLower() == EmailID.Trim().ToLower() && !u.IsDeleted
+                            select new UserViewModel
+                            {
+                                Username = u.Username,
+                                Firstname = u.Firstname,
+                                Lastname = u.Lastname,
+                                Id = u.Id
+                            }).FirstOrDefault() ?? new UserViewModel();
+                });
+
+                if (UVM == null)
+                {
+                    UVM = new UserViewModel();
+                }
+            }
+            catch (Exception)
+            {
+                // Handle exception
+            }
+            return UVM;
+        }
+
+        public async Task<bool> SaveGuid(string guid, Int32 id)
+        {
+            bool Result = false;
+            var entity = await _Db.Users.Where(x => x.Id == id && !x.IsDeleted).FirstOrDefaultAsync();
+
+            if (entity != null)
+            {
+                entity.ResetPasswordToken = guid;
+                entity.ResetPasswordTokenExpiry = DateTime.Now;
+                _Db.Users.Update(entity);
+                await _Db.SaveChangesAsync();
+                Result = true;
+            }
+            return Result;
+        }
+
+        public async Task<UserViewModel> GetUserDetailByGUID(string guid)
+        {
+            UserViewModel model = new UserViewModel();
+
+            try
+            {
+                if (!string.IsNullOrEmpty(guid))
+                {
+                    model = await Task.Run(() =>
+                    {
+                        return (from u in _Db.Users
+                                where !u.IsDeleted && u.ResetPasswordToken == guid
+                                select new UserViewModel
+                                {
+                                    Id = u.Id,
+                                    Firstname = u.Firstname ?? string.Empty,
+                                    Lastname = u.Lastname ?? string.Empty,
+                                    Email = u.Email ?? string.Empty,
+                                    Username = u.Username ?? string.Empty,
+                                    CreatedDate = u.CreatedDate,
+                                }).FirstOrDefault() ?? new UserViewModel();
+                    });
+                }
+            }
+            catch (Exception)
+            {
+                //WriteLog("HealthGauge.Web.Models.UserModel - GetAllUsersList", Ex.Message);
+            }
+            return model;
+        }
+
+        public async Task<bool> UpdatepasswordforUser(string? userid, string password)
+        {
+            bool retresult = false;
+            try
+            {
+                var entity = await Task.Run(() =>
+                {
+                    return (from u in _Db.Users where (u.Id.ToString() == userid) select new { u }).FirstOrDefault();
+                });
+
+                if (entity != null)
+                {
+                    entity.u.Password = await _Utility.Encrypt(password);
+                    _Db.Users.Update(entity.u);
+                    await _Db.SaveChangesAsync();
+                    retresult = true;
+                }
+            }
+            catch (Exception)
+            {
+                // WriteLog("HealthGauge.Web.Models.UserModel - UpdatepasswordforUser", Ex.Message);
+            }
+            return retresult;
+        }
+
     }
 }

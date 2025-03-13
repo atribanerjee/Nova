@@ -27,6 +27,15 @@
                         </li>
                     </ul>
                 </div>
+                <form class="d-flex">
+                    <button class="btn mx-1" type="button" id="LogOutBtn">
+                      @*   <a href="@Url.Action("LogOut","Accounts")">Log Out</a> *@
+                        <a class="btn mx-1" id="LogOutBtn" href="@Url.Action("LogOut", "Accounts")">Log Out</a>
+                    </button>
+                    @* <button class="btn mx-1" type="button" id="ResetBtn">
+                        <a href="@Url.Action("ResetPassword","Accounts")"> Reset Password</a>
+                    </button> *@
+                </form>
             </div>
         </nav>
     </header>

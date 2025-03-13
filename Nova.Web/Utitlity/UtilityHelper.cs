@@ -9,6 +9,9 @@
     using Microsoft.AspNetCore.Authentication.Cookies;
     using Microsoft.IdentityModel.Tokens;
     using Nova.Web.Models;
+    using System.Net.Mail;
+    using SendGrid;
+    using SendGrid.Helpers.Mail;
 
     public class UtilityHelper : IUtilityService
     {
@@ -97,7 +100,86 @@
             await Task.Run(() => _contextAccessor.HttpContext?.Response.Cookies.Delete(key));
         }
 
-        
+
+        public async Task<bool> SendEmailAsync(string subject, string email, string htmlMessage, String name, Dictionary<string, string> objDict)
+        {
+            bool Result = false;
+            //  var apiKey = _Configuration["EmailSettings:ApiKey"];
+
+            Microsoft.Extensions.Configuration.IConfiguration _Configuration = new ConfigurationBuilder()
+                .SetBasePath(System.IO.Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json")
+                .Build();
+
+            var client = new SendGridClient(_Configuration["EmailSettings:ApiKey"]);
+            // var from_email = new EmailAddress("amit.chakraborty@baseclass.co.in", "Example User");
+            var from_email = new EmailAddress(_Configuration["EmailSettings:SenderEmail"], "Example User");
+            var subject1 = "Sending with Twilio SendGrid is Fun";
+            var to_email = new EmailAddress(email);
+            var plainTextContent = "and easy to do anywhere, even with C#";
+            var htmlContent = ReadHtmlFile(objDict, htmlMessage);
+            var msg = MailHelper.CreateSingleEmail(from_email, to_email, subject1, plainTextContent, htmlContent);
+            var response = await client.SendEmailAsync(msg).ConfigureAwait(false);
+            if (response.IsSuccessStatusCode)
+            {
+                Result = true;
+            }
+            else
+            {
+                // Log the response for debugging
+                var responseBody = await response.Body.ReadAsStringAsync();
+                Console.WriteLine($"Failed to send email. StatusCode: {response.StatusCode}, ResponseBody: {responseBody}");
+            }
+
+            return Result;
+        }
+
+        public String ReadHtmlFile(Dictionary<String, String> obj, string htmlMessage)
+        {
+            String content = String.Empty;
+            String TemplatePath = htmlMessage;
+            try
+            {
+                Microsoft.Extensions.Configuration.IConfiguration _Configuration = new ConfigurationBuilder()
+                .SetBasePath(System.IO.Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json")
+                .Build();
+
+                var mailTemplatePath = _Configuration["MailHelperSettings:MailTemplatePath"];
+                if (string.IsNullOrEmpty(mailTemplatePath))
+                {
+                    throw new ArgumentNullException(nameof(mailTemplatePath), "Mail template path is not configured.");
+                }
+
+                var fileStream = new FileStream(Path.Combine(mailTemplatePath, TemplatePath), FileMode.Open, FileAccess.Read);
+                using (var streamReader = new StreamReader(fileStream, Encoding.UTF8))
+                {
+                    content = streamReader.ReadToEnd();
+                }
+
+                obj.Add("OrganizationMainSite", "Test");
+                obj.Add("OrganizationName", "Test1");
+                obj.Add("OrganizationLogo", "Test2");
+                obj.Add("OrgSupportEmail", "Test3");
+                obj.Add("OrgAddress", "Test4");
+
+                foreach (KeyValuePair<String, String> kv in obj)
+                {
+                    content = content.Replace("@@" + kv.Key + "@@", kv.Value);
+                }
+            }
+            catch (Exception Ex)
+            {
+                throw Ex;
+            }
+
+            return content;
+        }
+
+      
+
+
+
     }
 
 }
