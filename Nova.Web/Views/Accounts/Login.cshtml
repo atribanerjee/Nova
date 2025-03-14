@@ -57,7 +57,7 @@
 
 
     <form asp-action="ForgetPassword" asp-controller="Accounts" method="POST" data-ajax="true" data-ajax-update="result" asp-antiforgery="true" data-ajax-success="success">
-        {
+        
         <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-sm">
                 <div class="modal-content">
@@ -81,7 +81,7 @@
                 </div>
             </div>
         </div>
-        }
+       
     </form>
 
 
@@ -149,11 +149,49 @@
         <!-- Plugin used-->
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-ajax-unobtrusive/3.2.6/jquery.unobtrusive-ajax.js" integrity="sha256-v2nySZafnswY87um3ymbg7p9f766IQspC5oqaqZVX2c=" crossorigin="anonymous"></script>
         <script>
+           
                   success = function (result) {
                 window.location.href = result.url;
             };
+                 
 
-                    $('#liveToast').show('toast');
+        </script>
+        <script type="text/javascript">
+
+                        fetch('/Accounts/ResetPasswords', {
+                method: 'POST',
+                body: new URLSearchParams(new FormData(document.querySelector('form')))
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.url) {
+                    window.location.href = data.url;
+                } else {
+                    // Handle error or show a message
+                    console.error('Error: URL not found in response');
+                }
+            })
+            .catch(error => console.error('Error:', error));
+
+               fetch('/Accounts/ForgetPassword', {
+                method: 'POST',
+                body: new URLSearchParams(new FormData(document.querySelector('form')))
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.url) {
+                    window.location.href = data.url;
+                } else {
+                    // Handle error or show a message
+                    console.error('Error: URL not found in response');
+                }
+            })
+            .catch(error => console.error('Error:', error));
+
+
+
+            
+               $('#liveToast').show('toast');
             $("#ShowModal").click(function () {
                 $('#exampleModal').modal('show');
             });

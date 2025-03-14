@@ -34,6 +34,18 @@ namespace Nova.Web.Models
         [RegularExpression(@"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-za-z]{2,4}", ErrorMessage = "Please enter correct email")]
         public string Email { get; set; }
 
+        [DisplayName("New Password")]
+        [Required(ErrorMessage = "New Password is required")]
+        [StringLength(25, ErrorMessage = "Must be between 5 and 25 characters", MinimumLength = 5)]
+        [DataType(DataType.Password)]
+        public String NewPassword { get; set; }
+
+        [DisplayName("Confirm Password")]
+        [StringLength(25, ErrorMessage = "Must be between 5 and 25 characters", MinimumLength = 5)]
+        [DataType(DataType.Password)]
+        [System.ComponentModel.DataAnnotations.Compare("NewPassword", ErrorMessage = "Confirmation password do not match.")]
+        public string ConfirmPassword { get; set; }
+
         public int RoleId { get; set; }
 
         public DateTime CreatedDate { get; set; }
@@ -44,6 +56,7 @@ namespace Nova.Web.Models
         public bool IsDeleted { get; set; }
         public string? ResetPasswordToken { get; set; }
         public DateTime? ResetPasswordTokenExpiry { get; set; }
+        public int UserId { get; set; }
 
         public bool RememberMe { get; set; }
     }

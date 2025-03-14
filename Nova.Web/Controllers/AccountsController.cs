@@ -43,7 +43,7 @@ namespace Nova.Web.Controllers
         public async Task<IActionResult> Login([FromForm] UserViewModel model)
         {
             UserViewModel UVM = new UserViewModel();
-            RemoveModelStateItem("Firstname,Lastname,Email");
+            RemoveModelStateItem("Firstname,Lastname,Email,NewPassword,ConfirmPassword");
             var data = await _db.Roles.ToListAsync();
             if (ModelState.IsValid)
             {
@@ -121,7 +121,7 @@ namespace Nova.Web.Controllers
                         .AddJsonFile("appsettings.json")
                         .Build();
 
-                    objDict.Add("ActivationUrl", _Configuration["MailHelperSettings:BaseURl"] + "Accounts/ResetPasswords/" + guid);
+                    objDict.Add("ActivationUrl", _Configuration["EmailSettings:BaseURl"] + "Accounts/ResetPasswords/" + guid);
                     var SendmailResult = Task.Run(() => _Utility.SendEmailAsync("Reset Password Requested", model.Email, "ForgotPassword.html", lvm.Firstname, objDict));
                     if (SendmailResult.Result)
                     {
@@ -135,15 +135,16 @@ namespace Nova.Web.Controllers
                     bool Saveguidornot = await _Service.SaveGuid(guid.ToString(), lvm.Id);
                     TempData["IsShowVerification"] = "true";
                     ViewBag.SuccessMessage = "A One Time Password (OTP) has been sent to your registered email. Please check your email.";
-                    return RedirectToAction("LogIn", "Accounts");
+                    return Json(new { url = Url.Action("Login", "Accounts") });
                 }
                 else
                 {
                     TempData["SuccessMessage"] = "Email does not exists";
                 }
             }
+            return Json(new { url = Url.Action("Login", "Accounts") });
 
-            return RedirectToAction("Login", "Accounts");
+            
         }
 
         [HttpGet]
@@ -166,10 +167,11 @@ namespace Nova.Web.Controllers
         [HttpPost]
         public async Task<IActionResult> ResetPasswords(UserViewModel model)
         {
-            RemoveModelStateItem("id,lastname,password");
+            RemoveModelStateItem("Firstname,Lastname,Email,Username,NewPassword,Password");
+            ModelState.Remove("Id");
             if (ModelState.IsValid)
             {
-                if (await _Service.UpdatepasswordforUser(model.Id.ToString(), model.Password))
+                if (await _Service.UpdatepasswordforUser(model.UserId.ToString(), model.ConfirmPassword))
                 {
                     Dictionary<string, string> objDict = new Dictionary<string, string>();
                     objDict.Add("Pseudo", model.Firstname);
@@ -185,7 +187,7 @@ namespace Nova.Web.Controllers
                     }
 
 
-                    return RedirectToAction("Login", "Accounts");
+                    return Json(new { url = Url.Action("Login", "Accounts") });
                 }
                 else
                 {
@@ -197,8 +199,13 @@ namespace Nova.Web.Controllers
             {
                 return View(model);
             }
+            
 
         }
+
+      
+
+
 
         private void RemoveModelStateItem(String data)
         {

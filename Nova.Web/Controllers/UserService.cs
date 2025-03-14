@@ -114,6 +114,7 @@ namespace Nova.Web.Controllers
                                 select new UserViewModel
                                 {
                                     Id = u.Id,
+                                    UserId=u.Id,
                                     Firstname = u.Firstname ?? string.Empty,
                                     Lastname = u.Lastname ?? string.Empty,
                                     Email = u.Email ?? string.Empty,
