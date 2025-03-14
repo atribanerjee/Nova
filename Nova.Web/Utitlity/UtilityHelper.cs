@@ -145,7 +145,7 @@
                 .AddJsonFile("appsettings.json")
                 .Build();
 
-                var mailTemplatePath = _Configuration["MailHelperSettings:MailTemplatePath"];
+                var mailTemplatePath = _Configuration["EmailSettings:MailTemplatePath"];
                 if (string.IsNullOrEmpty(mailTemplatePath))
                 {
                     throw new ArgumentNullException(nameof(mailTemplatePath), "Mail template path is not configured.");
