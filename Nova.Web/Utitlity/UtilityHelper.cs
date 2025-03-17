@@ -22,46 +22,30 @@
             _contextAccessor = contextAccessor;
         }
 
-        public async Task SetSessionValue(string sKey, object sValue)
+        #region Handle Session Data
+
+        public void SetSessionValue(string sKey, object sValue)
         {
-            _contextAccessor.HttpContext?.Response.Cookies.Delete(sKey);
-
-            CookieOptions cookieOptions = new CookieOptions()
-            {
-                Expires = DateTime.Now.AddDays(30)
-            };
-
-            var CookieVal = sValue != null ? await Encrypt(sValue.ToString()) : string.Empty;
-            _contextAccessor.HttpContext?.Response.Cookies.Append(sKey, CookieVal, cookieOptions);
+            _contextAccessor.HttpContext.Session.SetString(sKey.ToLower(), sValue.ToString());
         }
-
-        public async Task<object> GetSessionValue(string sKey)
+        public object GetSessionValue(string sKey)
+        {
+            return GetSessionValue(sKey, null);
+        }
+        public object GetSessionValue(string sKey, object oReturnValue)
         {
             try
             {
-                if (_contextAccessor.HttpContext != null)
-                {
-                    var cookieValue = _contextAccessor.HttpContext.Request.Cookies[sKey];
-                    if (cookieValue == null)
-                    {
-                        return null;
-                    }
-                    else
-                    {
-                        return await Decrypt(cookieValue);
-                        //return cookieValue;
-                    }
-                }
-                else
-                {
-                    return null;
-                }
+                if (_contextAccessor.HttpContext.Session.GetString(sKey.ToLower()) == null) return oReturnValue;
+                else return _contextAccessor.HttpContext.Session.GetString(sKey.ToLower());
             }
             catch
             {
-                return null;
+                return oReturnValue;
             }
         }
+
+        #endregion
 
         public async Task<string> Encrypt(string plainText)
         {

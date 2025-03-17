@@ -12,5 +12,7 @@ namespace Nova.Web.Controllers
         public  Task<bool> UpdatepasswordforUser(int? uid, string password);
         public  Task<UserViewModel> GetUsersDetails(Int32 ID);
         public Task<Boolean> CheckPassword(int? userid, string password);
+        public void SetallSession(UserViewModel uvm);
+        public object GetSessionValue(string sKey);
     }
 }

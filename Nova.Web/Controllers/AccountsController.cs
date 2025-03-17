@@ -89,13 +89,7 @@ namespace Nova.Web.Controllers
                         await _Utility.RemoveCookies("NovaLogin");
                     }
                     // Set session value
-                    HttpContext.Session.SetInt32("LoggedInUserID", UVM.Id);
-                    HttpContext.Session.SetString("LoggedInUserName", UVM.Username);
-
-                    HttpContext.Session.SetString("LoggedInFirstName", UVM.Firstname);
-                    HttpContext.Session.SetString("LoggedInLastName", UVM.Lastname);
-                    HttpContext.Session.SetString("LoggedInEmail", UVM.Email);
-
+                    _Service.SetallSession(UVM);
 
 
                     return Json(new { url = Url.Action("Index", "Home") });
@@ -252,9 +246,10 @@ namespace Nova.Web.Controllers
                     // Update the following line in the ResetPassword method
                     //.string? uid = _Utility.GetSessionValue("LoggedInUserID").ToString();
                     // Retrieve session value
-                    int? uid = HttpContext.Session.GetInt32("LoggedInUserID");
+                    //  int? uid = HttpContext.Session.GetInt32("LoggedInUserID");
+                    string? uid = _Service.GetSessionValue("LoggedInUserID").ToString();
 
-                    Result = await _Service.UpdatepasswordforUser(uid, NewPassword);
+                    Result = await _Service.UpdatepasswordforUser(Convert.ToInt32(uid), NewPassword);
                     if (Result)
                     {
                         UserViewModel model = await _Service.GetUsersDetails(Convert.ToInt32(uid));

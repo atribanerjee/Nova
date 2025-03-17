@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Nova.DB;
 using Nova.DB.Utitlity;
 using Nova.Web.Models;
@@ -30,30 +31,31 @@ namespace Nova.Web.Controllers
                        Lastname = u.Lastname ?? string.Empty,
                        Email = u.Email ?? string.Empty,
                        RoleId = u.RoleId,
-                       Password= model.Password
+                       Password = model.Password
                    }).FirstOrDefault() ?? new UserViewModel();
 
             if (UVM != null && UVM.Id > 0)
             {
-                await SetallSession(UVM);
+                 SetallSession(UVM);
                 return UVM;
             }
 
             return new UserViewModel();
         }
 
-        public async Task SetallSession(UserViewModel UVM)
+        public void  SetallSession(UserViewModel uvm)
         {
-            
-            //await _Utility.SetSessionValue("LoggedInUserID", UVM.Id);
-            //await _Utility.SetSessionValue("LoggedInUserName", UVM.Username);
-            //await _Utility.SetSessionValue("LoggedInFirstName", UVM.Firstname);
-            //await _Utility.SetSessionValue("LoggedInLastName", UVM.Lastname);
-            //await _Utility.SetSessionValue("LoggedInEmail", UVM.Email);
 
+            _Utility.SetSessionValue("LoggedInUserID", uvm.Id);
+             _Utility.SetSessionValue("LoggedInUserName", uvm.Username);
+             _Utility.SetSessionValue("LoggedInFirstName", uvm.Firstname);
+             _Utility.SetSessionValue("LoggedInLastName", uvm.Lastname);
+             _Utility.SetSessionValue("LoggedInEmail", uvm.Email);
+        }
 
-            
-
+        public object GetSessionValue(string sKey)
+        {
+          return  _Utility.GetSessionValue(sKey);
         }
 
         public async Task<UserViewModel> CheckEmailIDExit(string EmailID)

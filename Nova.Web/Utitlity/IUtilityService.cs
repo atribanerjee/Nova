@@ -5,8 +5,8 @@ namespace Nova.Web.Utitlity
 {
     public interface IUtilityService
     {
-        public Task SetSessionValue(string sKey, object sValue);
-        public Task<object> GetSessionValue(string sKey);
+        public void SetSessionValue(string sKey, object sValue);
+        public object GetSessionValue(string sKey);
         public Task<string> Encrypt(string clearText);
         public Task<string> Decrypt(string cipherText);
         public Task<string> GetCookies(string cipherText);
@@ -14,6 +14,7 @@ namespace Nova.Web.Utitlity
         public Task RemoveCookies(string key);
 
         public Task<bool> SendEmailAsync(string subject, string email, string htmlMessage, String name, Dictionary<string, string> objDict);
+        
         //  public Task<string> sha256encription(string pass);
 
 
