@@ -31,11 +31,11 @@
                 Expires = DateTime.Now.AddDays(30)
             };
 
-            var CookieVal = await Encrypt(sValue.ToString());
+            var CookieVal = sValue != null ? await Encrypt(sValue.ToString()) : string.Empty;
             _contextAccessor.HttpContext?.Response.Cookies.Append(sKey, CookieVal, cookieOptions);
         }
 
-        public async Task<object> GetSessionValue(string sKey, object oReturnValue)
+        public async Task<object> GetSessionValue(string sKey)
         {
             try
             {
@@ -44,21 +44,22 @@
                     var cookieValue = _contextAccessor.HttpContext.Request.Cookies[sKey];
                     if (cookieValue == null)
                     {
-                        return oReturnValue;
+                        return null;
                     }
                     else
                     {
                         return await Decrypt(cookieValue);
+                        //return cookieValue;
                     }
                 }
                 else
                 {
-                    return oReturnValue;
+                    return null;
                 }
             }
             catch
             {
-                return oReturnValue;
+                return null;
             }
         }
 

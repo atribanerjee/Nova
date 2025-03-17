@@ -1,4 +1,5 @@
-﻿using Nova.Web.Models;
+﻿using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Nova.Web.Models;
 
 namespace Nova.Web.Controllers
 {
@@ -8,6 +9,8 @@ namespace Nova.Web.Controllers
         Task<UserViewModel> CheckEmailIDExit(string EmailID);
         public Task<bool> SaveGuid(string guid, Int32 id);
         public Task<UserViewModel> GetUserDetailByGUID(string guid);
-        public  Task<bool> UpdatepasswordforUser(string? uid, string password);
+        public  Task<bool> UpdatepasswordforUser(int? uid, string password);
+        public  Task<UserViewModel> GetUsersDetails(Int32 ID);
+        public Task<Boolean> CheckPassword(int? userid, string password);
     }
 }

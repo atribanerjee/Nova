@@ -88,6 +88,15 @@ namespace Nova.Web.Controllers
                     {
                         await _Utility.RemoveCookies("NovaLogin");
                     }
+                    // Set session value
+                    HttpContext.Session.SetInt32("LoggedInUserID", UVM.Id);
+                    HttpContext.Session.SetString("LoggedInUserName", UVM.Username);
+
+                    HttpContext.Session.SetString("LoggedInFirstName", UVM.Firstname);
+                    HttpContext.Session.SetString("LoggedInLastName", UVM.Lastname);
+                    HttpContext.Session.SetString("LoggedInEmail", UVM.Email);
+
+
 
                     return Json(new { url = Url.Action("Index", "Home") });
                 }
@@ -109,9 +118,10 @@ namespace Nova.Web.Controllers
         public async Task<IActionResult> LogOut()
         {
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-
-            await _Utility.SetSessionValue("LoggedInUserID", 0);
-            await _Utility.SetSessionValue("LoggedInUserName", String.Empty);
+            HttpContext.Session.SetInt32("LoggedInUserID", 0);
+            HttpContext.Session.SetString("LoggedInUserName", String.Empty);
+            //await _Utility.SetSessionValue("LoggedInUserID", 0);
+            //await _Utility.SetSessionValue("LoggedInUserName", String.Empty);
             // HttpContext.Session.Clear();
             await ClearCookies();   // CLEAR COOKIES AFTER LOGOUT
 
@@ -193,7 +203,7 @@ namespace Nova.Web.Controllers
             ModelState.Remove("Id");
             if (ModelState.IsValid)
             {
-                if (await _Service.UpdatepasswordforUser(model.UserId.ToString(), model.ConfirmPassword))
+                if (await _Service.UpdatepasswordforUser(model.UserId, model.ConfirmPassword))
                 {
                     Dictionary<string, string> objDict = new Dictionary<string, string>();
                     objDict.Add("Pseudo", model.Firstname);
@@ -240,7 +250,10 @@ namespace Nova.Web.Controllers
                 if (NewPassword == ConfirmPassword)
                 {
                     // Update the following line in the ResetPassword method
-                    string? uid = _Utility.GetSessionValue("LoggedInUserID", 0).ToString();
+                    //.string? uid = _Utility.GetSessionValue("LoggedInUserID").ToString();
+                    // Retrieve session value
+                    int? uid = HttpContext.Session.GetInt32("LoggedInUserID");
+
                     Result = await _Service.UpdatepasswordforUser(uid, NewPassword);
                     if (Result)
                     {
@@ -272,6 +285,21 @@ namespace Nova.Web.Controllers
 
             }
             return Json(new { Result = true, Message = "New and old password same" });
+        }
+
+        [HttpGet]
+        public async Task<JsonResult> Checkpassword(String Password)
+        {
+            // string? uid = _Utility.GetSessionValue("LoggedInUserID").ToString();
+            int? uid = HttpContext.Session.GetInt32("LoggedInUserID");
+            if (uid != null && await _Service.CheckPassword(uid, Password))
+            {
+                return Json(new { Result = true, Message = "New and old password same" });
+            }
+            else
+            {
+                return Json(new { Result = false, Message = "" });
+            }
         }
 
 

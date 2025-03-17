@@ -6,7 +6,7 @@ namespace Nova.Web.Utitlity
     public interface IUtilityService
     {
         public Task SetSessionValue(string sKey, object sValue);
-        public Task<object> GetSessionValue(string sKey, object oReturnValue);
+        public Task<object> GetSessionValue(string sKey);
         public Task<string> Encrypt(string clearText);
         public Task<string> Decrypt(string cipherText);
         public Task<string> GetCookies(string cipherText);

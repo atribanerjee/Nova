@@ -45,12 +45,15 @@ namespace Nova.Web.Controllers
         public async Task SetallSession(UserViewModel UVM)
         {
             
-            await _Utility.SetSessionValue("LoggedInUserID", UVM.Id);
-            await _Utility.SetSessionValue("LoggedInUserName", UVM.Username);
-            await _Utility.SetSessionValue("LoggedInFirstName", UVM.Firstname);
-            await _Utility.SetSessionValue("LoggedInLastName", UVM.Lastname);
-            await _Utility.SetSessionValue("LoggedInEmail", UVM.Email);
-           
+            //await _Utility.SetSessionValue("LoggedInUserID", UVM.Id);
+            //await _Utility.SetSessionValue("LoggedInUserName", UVM.Username);
+            //await _Utility.SetSessionValue("LoggedInFirstName", UVM.Firstname);
+            //await _Utility.SetSessionValue("LoggedInLastName", UVM.Lastname);
+            //await _Utility.SetSessionValue("LoggedInEmail", UVM.Email);
+
+
+            
+
         }
 
         public async Task<UserViewModel> CheckEmailIDExit(string EmailID)
@@ -131,14 +134,14 @@ namespace Nova.Web.Controllers
             return model;
         }
 
-        public async Task<bool> UpdatepasswordforUser(string? userid, string password)
+        public async Task<bool> UpdatepasswordforUser(int? userid, string password)
         {
             bool retresult = false;
             try
             {
                 var entity = await Task.Run(() =>
                 {
-                    return (from u in _Db.Users where (u.Id.ToString() == userid) select new { u }).FirstOrDefault();
+                    return (from u in _Db.Users where (u.Id == userid) select new { u }).FirstOrDefault();
                 });
 
                 if (entity != null)
@@ -156,28 +159,27 @@ namespace Nova.Web.Controllers
             return retresult;
         }
 
-        public UserViewModel GetUsersDetails(Int32 ID)
+        public async Task<UserViewModel> GetUsersDetails(Int32 ID)
         {
             UserViewModel model = new UserViewModel();
-            // List<UserViewModel> lstchunk = new List<UserViewModel>();
 
             try
             {
                 if (ID > 0)
                 {
-                    model = (from u in _Db.Users
-                             where !u.IsDeleted && u.Id == ID
-                             select new UserViewModel
-                             {
-                                 Id = u.Id,
-                                 Firstname = u.Firstname,
-                                 Lastname = u.Lastname,
-                                 Email = u.Email,
-                                 Username = u.Username,
-                                 //usercreateddatetime = u.usercreateddatetime,
-                             })
-
-                       .FirstOrDefault();
+                    model = await Task.Run(() =>
+                    {
+                        return (from u in _Db.Users
+                                where !u.IsDeleted && u.Id == ID
+                                select new UserViewModel
+                                {
+                                    Id = u.Id,
+                                    Firstname = u.Firstname,
+                                    Lastname = u.Lastname,
+                                    Email = u.Email,
+                                    Username = u.Username,
+                                }).FirstOrDefault();
+                    });
                 }
             }
             catch (Exception Ex)
@@ -186,6 +188,27 @@ namespace Nova.Web.Controllers
             }
             return model;
         }
+        public async Task<Boolean> CheckPassword(int? userid, string password)
+        {
+            Boolean retresult = false;
+            try
+            {
+                string encryptedPassword = await _Utility.Encrypt(password);
+                var entity = (from u in _Db.Users
+                              where (u.Id == userid && u.Password == encryptedPassword)
+                              select new { u }).FirstOrDefault();
+                if (entity != null)
+                {
+                    retresult = true;
+                }
+            }
+            catch (Exception Ex)
+            {
+                // WriteLog("HealthGauge.Web.Models.UserModel - UpdatepasswordforUser", Ex.Message);
+            }
+            return retresult;
+        }
+
 
     }
 }
