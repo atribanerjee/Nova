@@ -13,39 +13,46 @@
     using SendGrid;
     using SendGrid.Helpers.Mail;
 
-    public class UtilityHelper : IUtilityService
+    public class UtilityServices : IUtilityServices
     {
         private readonly IHttpContextAccessor _contextAccessor;
 
-        public UtilityHelper(IHttpContextAccessor contextAccessor)
+        public UtilityServices(IHttpContextAccessor contextAccessor)
         {
             _contextAccessor = contextAccessor;
         }
 
-        #region Handle Session Data
-
         public void SetSessionValue(string sKey, object sValue)
         {
-            _contextAccessor.HttpContext.Session.SetString(sKey.ToLower(), sValue.ToString());
+            if (_contextAccessor.HttpContext?.Session != null && sValue != null)
+            {
+                _contextAccessor.HttpContext.Session.SetString(sKey.ToLower(), sValue.ToString() ?? string.Empty);
+            }
         }
+
         public object GetSessionValue(string sKey)
         {
-            return GetSessionValue(sKey, null);
+            return GetSessionValue(sKey,null);
         }
-        public object GetSessionValue(string sKey, object oReturnValue)
+
+        public object GetSessionValue(string sKey, object? oReturnValue = null)
         {
             try
             {
-                if (_contextAccessor.HttpContext.Session.GetString(sKey.ToLower()) == null) return oReturnValue;
-                else return _contextAccessor.HttpContext.Session.GetString(sKey.ToLower());
+                if (_contextAccessor.HttpContext?.Session == null || _contextAccessor.HttpContext.Session.GetString(sKey.ToLower()) == null)
+                {
+                    return oReturnValue ?? string.Empty;
+                }
+                else
+                {
+                    return _contextAccessor.HttpContext.Session.GetString(sKey.ToLower()) ?? string.Empty;
+                }
             }
             catch
             {
-                return oReturnValue;
+                return oReturnValue ?? string.Empty;
             }
         }
-
-        #endregion
 
         public async Task<string> Encrypt(string plainText)
         {
@@ -99,11 +106,10 @@
             var client = new SendGridClient(_Configuration["EmailSettings:ApiKey"]);
             // var from_email = new EmailAddress("amit.chakraborty@baseclass.co.in", "Example User");
             var from_email = new EmailAddress(_Configuration["EmailSettings:SenderEmail"], "Support@novaassetmanagement.net");
-            var subject1 = "Reset Your Password";
             var to_email = new EmailAddress(email);
             var plainTextContent = " ";
             var htmlContent = ReadHtmlFile(objDict, htmlMessage);
-            var msg = MailHelper.CreateSingleEmail(from_email, to_email, subject1, plainTextContent, htmlContent);
+            var msg = MailHelper.CreateSingleEmail(from_email, to_email, subject, plainTextContent, htmlContent);
             var response = await client.SendEmailAsync(msg).ConfigureAwait(false);
             if (response.IsSuccessStatusCode)
             {
@@ -155,16 +161,25 @@
             }
             catch (Exception Ex)
             {
-                throw Ex;
+
             }
 
             return content;
         }
 
-      
-
-
-
+        public void LogOut()
+        {
+            try
+            {
+                if (_contextAccessor.HttpContext?.Session != null)
+                {
+                    _contextAccessor.HttpContext.Session.Clear();
+                }
+            }
+            catch
+            {
+            }
+        }
     }
 
 }

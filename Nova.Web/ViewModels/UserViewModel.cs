@@ -1,9 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel;
-using Nova.DB.POCO;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 
-namespace Nova.Web.Models
+namespace Nova.Web.ViewModels
 {
     public class UserViewModel
     {

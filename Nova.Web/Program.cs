@@ -2,7 +2,8 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using Nova.DB;
 using Nova.DB.Utitlity;
-using Nova.Web.Controllers;
+using Nova.Web.Interfaces;
+using Nova.Web.Models;
 using Nova.Web.Utitlity;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -14,15 +15,11 @@ builder.Services.AddDbContext<NovaDBContext>(options =>
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
-builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<IUtilityService, UtilityHelper>();
+builder.Services.AddRazorPages().AddRazorRuntimeCompilation();
+builder.Services.AddScoped<IUserServices, UserServices>();
+builder.Services.AddScoped<IUtilityServices, UtilityServices>();
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddSession(options =>
-{
-    options.IdleTimeout = TimeSpan.FromMinutes(30); // Set session timeout
-    options.Cookie.HttpOnly = true; // Make the session cookie HTTP-only
-    options.Cookie.IsEssential = true; // Make the session cookie essential
-});
+
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
@@ -30,6 +27,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.LogoutPath = "/Accounts/LogOut";
         options.ExpireTimeSpan = TimeSpan.FromDays(30); // Set default expiration time
     });
+
 
 var app = builder.Build();
 
@@ -47,9 +45,6 @@ app.UseStaticFiles();
 app.UseRouting();
 
 app.UseAuthorization();
-
-// Add session middleware
-app.UseSession();
 
 app.MapControllerRoute(
     name: "default",

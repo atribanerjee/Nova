@@ -1,12 +1,11 @@
-﻿using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication;
+﻿using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Nova.DB;
-using Nova.DB.Utitlity;
-using Nova.Web.Models;
+using Nova.Web.Interfaces;
 using Nova.Web.Utitlity;
-using System.Threading.Tasks;
+using Nova.Web.ViewModels;
 using System.Security.Claims;
 
 namespace Nova.Web.Controllers
@@ -14,9 +13,9 @@ namespace Nova.Web.Controllers
     public class AccountsController : Controller
     {
         NovaDBContext _db;
-        private IUserService _Service;
-        private IUtilityService _Utility;
-        public AccountsController(NovaDBContext db, IUserService Ser, IUtilityService Uti)
+        private IUserServices _Service;
+        private IUtilityServices _Utility;
+        public AccountsController(NovaDBContext db, IUserServices Ser, IUtilityServices Uti)
         {
             _db = db;
             _Service = Ser;
@@ -61,14 +60,14 @@ namespace Nova.Web.Controllers
             var data = await _db.Roles.ToListAsync();
             if (ModelState.IsValid)
             {
-                UVM = await _Service.logins(model);
+                UVM = await _Service.CheckLogin(model);
                 if (UVM != null && UVM.Id > 0)
                 {
                     var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.Name, UVM.Username),
-                new Claim(ClaimTypes.NameIdentifier, UVM.Id.ToString())
-            };
+                    {
+                        new Claim(ClaimTypes.Name, UVM.Username),
+                        new Claim(ClaimTypes.NameIdentifier, UVM.Id.ToString())
+                    };
 
                     var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
                     var authProperties = new AuthenticationProperties
@@ -88,16 +87,13 @@ namespace Nova.Web.Controllers
                     {
                         await _Utility.RemoveCookies("NovaLogin");
                     }
-                    // Set session value
-                    _Service.SetallSession(UVM);
-
 
                     return Json(new { url = Url.Action("Index", "Home") });
                 }
                 else
                 {
 
-                    TempData["ErrorMessage"] = "Invalid user id or password";
+                    TempData["ErrorMessage"] = "Invalid username or password";
                     return Json(new { url = Url.Action("Login", "Accounts") });
 
                 }
@@ -109,15 +105,9 @@ namespace Nova.Web.Controllers
 
         }
 
-        public async Task<IActionResult> LogOut()
+        public IActionResult LogOut()
         {
-            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-            HttpContext.Session.SetInt32("LoggedInUserID", 0);
-            HttpContext.Session.SetString("LoggedInUserName", String.Empty);
-            //await _Utility.SetSessionValue("LoggedInUserID", 0);
-            //await _Utility.SetSessionValue("LoggedInUserName", String.Empty);
-            // HttpContext.Session.Clear();
-            await ClearCookies();   // CLEAR COOKIES AFTER LOGOUT
+           _Service.LogOut();
 
             return RedirectToAction("LogIn", "Accounts");
         }
@@ -133,7 +123,7 @@ namespace Nova.Web.Controllers
             UserViewModel lvm = new UserViewModel();
             if (!string.IsNullOrEmpty(model.Email.ToString()))
             {
-                lvm = await _Service.CheckEmailIDExit(model.Email.ToString());
+                lvm = await _Service.CheckEmailExists(model.Email.ToString());
                 if (lvm != null)
                 {
                     Guid guid = Guid.NewGuid();
@@ -148,24 +138,23 @@ namespace Nova.Web.Controllers
                         .Build();
 
                     objDict.Add("ActivationUrl", _Configuration["EmailSettings:BaseURl"] + "Accounts/ResetPasswords/" + guid);
-                    var SendmailResult = Task.Run(() => _Utility.SendEmailAsync("Reset Password Requested", model.Email, "ForgotPassword.html", lvm.Firstname, objDict));
+                    var SendmailResult = Task.Run(() => _Utility.SendEmailAsync("Notification: Reset Password Requested", model.Email, "ForgotPassword.html", lvm.Firstname, objDict));
                     if (SendmailResult.Result)
                     {
-                        TempData["SuccessMessage"] = "A One Time Password (OTP) has been sent to your registered email. Please check your email.";
+                        TempData["SuccessMessage"] = "An email has been sent to your registered email. Please check your email.";
                     }
                     else
                     {
-                        TempData["SuccessMessage"] = "Mail sending fail";
+                        TempData["SuccessMessage"] = "Email sending is failed.";
                     }
 
                     bool Saveguidornot = await _Service.SaveGuid(guid.ToString(), lvm.Id);
-                    TempData["IsShowVerification"] = "true";
-                    ViewBag.SuccessMessage = "A One Time Password (OTP) has been sent to your registered email. Please check your email.";
+                    TempData["IsShowVerification"] = "true";                    
                     return Json(new { url = Url.Action("Login", "Accounts") });
                 }
                 else
                 {
-                    TempData["SuccessMessage"] = "Email does not exists";
+                    TempData["SuccessMessage"] = "Invalid Email address.";
                 }
             }
             return Json(new { url = Url.Action("Login", "Accounts") });
@@ -197,12 +186,12 @@ namespace Nova.Web.Controllers
             ModelState.Remove("Id");
             if (ModelState.IsValid)
             {
-                if (await _Service.UpdatepasswordforUser(model.UserId, model.ConfirmPassword))
+                if (await _Service.UpdatePasswordForUser(model.UserId, model.ConfirmPassword))
                 {
                     Dictionary<string, string> objDict = new Dictionary<string, string>();
                     objDict.Add("Pseudo", model.Firstname);
-                    var SendmailResult = Task.Run(() => _Utility.SendEmailAsync("Your Password has Changed Successfully. If you don't do that plase comtact admin", model.Email, "ChangePassword.html", model.Firstname, objDict));
-                    // MH.SendEmail("Password Changed Successfully", model.emailid, "ChangePassword.html", objDict);
+                    var SendmailResult = Task.Run(() => _Utility.SendEmailAsync("Notification: Password Updated Successfully", model.Email, "ChangePassword.html", model.Firstname, objDict));
+                    
                     if (SendmailResult.Result)
                     {
                         TempData["SuccessMessage"] = "Your Password has successfully changed";
@@ -213,7 +202,7 @@ namespace Nova.Web.Controllers
                     }
 
 
-                    return Json(new { url = Url.Action("Login", "Accounts") });
+                    return RedirectToAction("Login", "Accounts");
                 }
                 else
                 {
@@ -243,20 +232,18 @@ namespace Nova.Web.Controllers
             {
                 if (NewPassword == ConfirmPassword)
                 {
-                    // Update the following line in the ResetPassword method
-                    //.string? uid = _Utility.GetSessionValue("LoggedInUserID").ToString();
-                    // Retrieve session value
-                    //  int? uid = HttpContext.Session.GetInt32("LoggedInUserID");
-                    string? uid = _Service.GetSessionValue("LoggedInUserID").ToString();
+                    UserViewModel model = _Service.GetUserDataFromSession();
 
-                    Result = await _Service.UpdatepasswordforUser(Convert.ToInt32(uid), NewPassword);
+
+                    // Update the following line in the ResetPassword method
+                    
+                    Result = await _Service.UpdatePasswordForUser(model.UserId, NewPassword);
                     if (Result)
-                    {
-                        UserViewModel model = await _Service.GetUsersDetails(Convert.ToInt32(uid));
+                    {                        
                         Dictionary<string, string> objDict = new Dictionary<string, string>();
                         objDict.Add("Pseudo", model.Firstname);
-                        var SendmailResult = Task.Run(() => _Utility.SendEmailAsync("Your Password has Changed Successfully. If you don't do that plase comtact admin", model.Email, "ChangePassword.html", model.Firstname, objDict));
-                        // MH.SendEmail("Password Changed Successfully", model.emailid, "ChangePassword.html", objDict);
+                        var SendmailResult = Task.Run(() => _Utility.SendEmailAsync("Notification: Password Updated Successfully", model.Email, "ChangePassword.html", model.Firstname, objDict));
+                     
                         if (SendmailResult.Result)
                         {
                             TempData["SuccessMessage"] = "Your Password has successfully changed";
@@ -265,36 +252,21 @@ namespace Nova.Web.Controllers
                         {
                             TempData["SuccessMessage"] = "Your Password has not changed";
                         }
-                        await LogOut();
-                        return Json(new { Result = true, Message = "" });
+                        LogOut();
+                        return Json(new { Result = true, Message = "Your Password has successfully changed" });
                     }
                     else
                     {
-                        return Json(new { Result = true, Message = "New and old password not same" });
+                        return Json(new { Result = true, Message = "New and old password should not be same" });
                     }
                 }
                 else
                 {
-                    return Json(new { Result = false, Message = "New and old password not same" });
+                    return Json(new { Result = false, Message = "Passwords are not matching." });
                 }
 
             }
-            return Json(new { Result = true, Message = "New and old password same" });
-        }
-
-        [HttpGet]
-        public async Task<JsonResult> Checkpassword(String Password)
-        {
-            // string? uid = _Utility.GetSessionValue("LoggedInUserID").ToString();
-            int? uid = HttpContext.Session.GetInt32("LoggedInUserID");
-            if (uid != null && await _Service.CheckPassword(uid, Password))
-            {
-                return Json(new { Result = true, Message = "New and old password same" });
-            }
-            else
-            {
-                return Json(new { Result = false, Message = "" });
-            }
+            return Json(new { Result = true, Message = "Missing data." });
         }
 
 

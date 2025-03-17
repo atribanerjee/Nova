@@ -1,8 +1,7 @@
-﻿@model Nova.Web.Models.UserViewModel
+﻿@model Nova.Web.ViewModels.UserViewModel
 
 @{
     Layout = null;
-    /// Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
 <!DOCTYPE html>
@@ -58,7 +57,7 @@
 
     <form asp-action="ForgetPassword" asp-controller="Accounts" method="POST" data-ajax="true" data-ajax-update="result" asp-antiforgery="true" data-ajax-success="success">
 
-        <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal fade" id="forgotPasswordModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-sm">
                 <div class="modal-content">
                     <div class="modal-header">
@@ -67,21 +66,16 @@
                     </div>
                     <div class="modal-body">
                         <p>Enter your e-mail address below to reset your password.</p>
-                        @Html.TextBoxFor(m => m.Email, new { @class = "form-control", @placeholder = "Email Address", @autofocus = "" })
+                        @Html.TextBoxFor(m => m.Email, new { @class = "form-control", @placeholder = "Email Address", @autofocus = "", @autocomplete = "off" })
                         <span class="text-danger"> @Html.ValidationMessageFor(m => m.Email)</span>
                     </div>
                     <div class="modal-footer">
-                        <button data-dismiss="modal" class="btn btn-default" type="button">Cancel</button>
-                        <button id="btnReset" class="btn btn-success" type="submit">Submit</button>
+                        <button data-bs-dismiss="modal" class="btn btn-danger" type="button">Cancel</button>
+                        <button id="btnReset" class="btn btn-primary" type="submit">Submit</button>
                     </div>
-                    @*   <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            <button type="button" class="btn btn-primary">Save changes</button>
-            </div> *@
                 </div>
             </div>
         </div>
-
     </form>
 
 
@@ -95,7 +89,7 @@
                         <div><a class="logo text-start" href="index.html"><img class="img-fluid for-light" src="@Url.Content("~/assets/images/logo/logo.png")" alt="looginpage" /></a></div>
                         <div class="login-main">
 
-                            <form asp-action="Login" asp-controller="Accounts" method="POST" data-ajax="true" data-ajax-update="result" asp-antiforgery="true" data-ajax-success="success">
+                            <form class="theme-form" asp-action="Login" asp-controller="Accounts" method="POST" data-ajax="true" data-ajax-update="result" asp-antiforgery="true" data-ajax-success="success">
                                 <h3>Sign in to account</h3>
                                 <p>Enter your username & password to login</p>
                                 <div class="form-group">
@@ -109,22 +103,16 @@
                                     <div class="form-input position-relative">
                                         @Html.PasswordFor(m => m.Password, new { @class = "form-control ", @placeholder = "Password", @autocomplete = "off" })
                                         @Html.ValidationMessageFor(m => m.Password, "", new { @class = "text-danger" })
+                                        <div class="show-hide"><span class="show"></span></div>
                                     </div>
                                 </div>
                                 <div class="form-group mb-0">
-                                    <div class="custom-control custom-checkbox mb-4 ">
+                                    <div class="checkbox p-0">
                                         @Html.CheckBoxFor(m => m.RememberMe, new { @class = "custom-control-input", })
-                                        <label class="custom-control-label" for="checkbox1">Remember password</label>
-                                    </div>
-                                    <button class="btn btn-primary btn-block w-100" type="submit">Sign in</button>
-                                    <button type="button" id="ShowModal" class="btn btn-link" data-bs-toggle="modal" data-bs-target="#exampleModal">Forget Password</button>
-                                </div>
-
-                                <h6 class="text-muted mt-4 or">Or Sign in with</h6>
-                                <div class="social mt-4">
-                                    <div class="btn-showcase"><a class="btn btn-light" href="https://www.linkedin.com/login" target="_blank"><i class="txt-linkedin" data-feather="linkedin"></i> LinkedIn </a><a class="btn btn-light" href="https://twitter.com/login?lang=en" target="_blank"><i class="txt-twitter" data-feather="twitter"></i>twitter</a><a class="btn btn-light" href="https://www.facebook.com/" target="_blank"><i class="txt-fb" data-feather="facebook"></i>facebook</a></div>
-                                </div>
-                                <p class="mt-4 mb-0 text-center">Don't have account?<a class="ms-2" href="sign-up.html">Create Account</a></p>
+                                        <label class="text-muted" for="RememberMe">Remember password</label>
+                                    </div><a class="link" href="javscript:void(0);" id="ShowModal" data-bs-toggle="modal" data-bs-target="#forgotPasswordModal">Forgot password?</a>
+                                    <button class="btn btn-primary btn-block w-100" type="submit">Sign in</button>                                    
+                                </div>                                
                             </form>
 
                         </div>
@@ -181,7 +169,7 @@
         }
 
         $("#ShowModal").click(function () {
-            $('#exampleModal').modal('show');
+            $('#forgotPasswordModal').modal('show');
         });
 
        $("#btnReset").click(function () {

@@ -1,4 +1,4 @@
-namespace Nova.Web.Models
+namespace Nova.Web.ViewModels
 {
     public class ErrorViewModel
     {
