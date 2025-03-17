@@ -113,10 +113,10 @@
 
             var client = new SendGridClient(_Configuration["EmailSettings:ApiKey"]);
             // var from_email = new EmailAddress("amit.chakraborty@baseclass.co.in", "Example User");
-            var from_email = new EmailAddress(_Configuration["EmailSettings:SenderEmail"], "Example User");
-            var subject1 = "Sending with Twilio SendGrid is Fun";
+            var from_email = new EmailAddress(_Configuration["EmailSettings:SenderEmail"], "Support@novaassetmanagement.net");
+            var subject1 = "Reset Your Password";
             var to_email = new EmailAddress(email);
-            var plainTextContent = "and easy to do anywhere, even with C#";
+            var plainTextContent = " ";
             var htmlContent = ReadHtmlFile(objDict, htmlMessage);
             var msg = MailHelper.CreateSingleEmail(from_email, to_email, subject1, plainTextContent, htmlContent);
             var response = await client.SendEmailAsync(msg).ConfigureAwait(false);

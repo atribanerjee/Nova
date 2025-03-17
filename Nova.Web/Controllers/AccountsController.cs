@@ -225,8 +225,54 @@ namespace Nova.Web.Controllers
 
         }
 
-      
 
+        public IActionResult ResetPassword()
+        {
+            return View();
+        }
+        [HttpPost]
+        public async Task<JsonResult> ResetPassword(string password, string NewPassword, string ConfirmPassword)
+        {
+            bool Result = false;
+            RemoveModelStateItem("firstname,lastname,username,emailid");
+            if (ModelState.IsValid)
+            {
+                if (NewPassword == ConfirmPassword)
+                {
+                    // Update the following line in the ResetPassword method
+                    string? uid = _Utility.GetSessionValue("LoggedInUserID", 0).ToString();
+                    Result = await _Service.UpdatepasswordforUser(uid, NewPassword);
+                    if (Result)
+                    {
+                        UserViewModel model = await _Service.GetUsersDetails(Convert.ToInt32(uid));
+                        Dictionary<string, string> objDict = new Dictionary<string, string>();
+                        objDict.Add("Pseudo", model.Firstname);
+                        var SendmailResult = Task.Run(() => _Utility.SendEmailAsync("Your Password has Changed Successfully. If you don't do that plase comtact admin", model.Email, "ChangePassword.html", model.Firstname, objDict));
+                        // MH.SendEmail("Password Changed Successfully", model.emailid, "ChangePassword.html", objDict);
+                        if (SendmailResult.Result)
+                        {
+                            TempData["SuccessMessage"] = "Your Password has successfully changed";
+                        }
+                        else
+                        {
+                            TempData["SuccessMessage"] = "Your Password has not changed";
+                        }
+                        await LogOut();
+                        return Json(new { Result = true, Message = "" });
+                    }
+                    else
+                    {
+                        return Json(new { Result = true, Message = "New and old password not same" });
+                    }
+                }
+                else
+                {
+                    return Json(new { Result = false, Message = "New and old password not same" });
+                }
+
+            }
+            return Json(new { Result = true, Message = "New and old password same" });
+        }
 
 
         private void RemoveModelStateItem(String data)

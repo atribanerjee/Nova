@@ -114,14 +114,14 @@ namespace Nova.Web.Controllers
                                 select new UserViewModel
                                 {
                                     Id = u.Id,
-                                    UserId=u.Id,
+                                    UserId = u.Id,
                                     Firstname = u.Firstname ?? string.Empty,
                                     Lastname = u.Lastname ?? string.Empty,
                                     Email = u.Email ?? string.Empty,
                                     Username = u.Username ?? string.Empty,
                                     CreatedDate = u.CreatedDate,
                                 }).FirstOrDefault() ?? new UserViewModel();
-                    });
+                    }) ?? new UserViewModel();
                 }
             }
             catch (Exception)
@@ -154,6 +154,37 @@ namespace Nova.Web.Controllers
                 // WriteLog("HealthGauge.Web.Models.UserModel - UpdatepasswordforUser", Ex.Message);
             }
             return retresult;
+        }
+
+        public UserViewModel GetUsersDetails(Int32 ID)
+        {
+            UserViewModel model = new UserViewModel();
+            // List<UserViewModel> lstchunk = new List<UserViewModel>();
+
+            try
+            {
+                if (ID > 0)
+                {
+                    model = (from u in _Db.Users
+                             where !u.IsDeleted && u.Id == ID
+                             select new UserViewModel
+                             {
+                                 Id = u.Id,
+                                 Firstname = u.Firstname,
+                                 Lastname = u.Lastname,
+                                 Email = u.Email,
+                                 Username = u.Username,
+                                 //usercreateddatetime = u.usercreateddatetime,
+                             })
+
+                       .FirstOrDefault();
+                }
+            }
+            catch (Exception Ex)
+            {
+                //WriteLog("HealthGauge.Web.Models.UserModel - GetAllUsersList", Ex.Message);
+            }
+            return model;
         }
 
     }
