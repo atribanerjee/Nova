@@ -132,30 +132,27 @@
                 </div>
             </div>
         </div>
-        <!-- latest jquery-->
-        <script src="@Url.Content("~/assets/js/jquery.min.js")"></script>
-        <!-- Bootstrap js-->
-        <script src="@Url.Content("~/assets/js/bootstrap/bootstrap.bundle.min.js")"></script>
-        <!-- feather icon js-->
-        <script src="@Url.Content("~/assets/js/icons/feather-icon/feather.min.js")"></script>
-        <script src="@Url.Content("~/assets/js/icons/feather-icon/feather-icon.js")"></script>
-        <!-- scrollbar js-->
-        <!-- Sidebar jquery-->
-        <script src="@Url.Content("~/assets/js/config.js")"></script>
-        <!-- Plugins JS start-->
-        <!-- Plugins JS Ends-->
-        <!-- Theme js-->
-        <script src="@Url.Content("~/assets/js/script.js")"></script>
-        <!-- Plugin used-->
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-ajax-unobtrusive/3.2.6/jquery.unobtrusive-ajax.js" integrity="sha256-v2nySZafnswY87um3ymbg7p9f766IQspC5oqaqZVX2c=" crossorigin="anonymous"></script>
-
     </div>
 </body>
 </html>
+<!-- latest jquery-->
+<script src="@Url.Content("~/assets/js/jquery.min.js")"></script>
+<!-- Bootstrap js-->
+<script src="@Url.Content("~/assets/js/bootstrap/bootstrap.bundle.min.js")"></script>
+<!-- feather icon js-->
+<script src="@Url.Content("~/assets/js/icons/feather-icon/feather.min.js")"></script>
+<script src="@Url.Content("~/assets/js/icons/feather-icon/feather-icon.js")"></script>
+<!-- scrollbar js-->
+<!-- Sidebar jquery-->
+<script src="@Url.Content("~/assets/js/config.js")"></script>
+<!-- Plugins JS start-->
+<!-- Plugins JS Ends-->
+<!-- Theme js-->
+<script src="@Url.Content("~/assets/js/script.js")"></script>
+<!-- Plugin used-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-ajax-unobtrusive/3.2.6/jquery.unobtrusive-ajax.js" integrity="sha256-v2nySZafnswY87um3ymbg7p9f766IQspC5oqaqZVX2c=" crossorigin="anonymous"></script>
 <script>
-
-          success = function (result) {
-              debugger;
+    success = function (result) {              
         window.location.href = result.url;
     };
 
@@ -187,19 +184,18 @@
         });
 
        $("#btnReset").click(function () {
-        $.ajax({
-            url: "/LogIn/ForgotPassword",
-            contentType: "application/json",
-            dataType: "json",
-            type: "Post",
-            headers: {}
-        }).done(function (data) {
-            $("#modalcomments").modal('hide');
-            viewModel.get("comments").read();
-            (<HTMLFormElement>frmComment[0]).reset();
-        }).fail(function (jqXHR, textStatus) {
-            Ephron.WebApp.Common.showFinanceAlert("Something went wrong while submitting your request, Please enter comments.");
-        }).always(function () {});
-    });
+            $.ajax({
+                url: "/LogIn/ForgotPassword",
+                contentType: "application/json",
+                dataType: "json",
+                type: "Post",
+                headers: {}
+            }).done(function (data) {
+                $("#modalcomments").modal('hide');
+                viewModel.get("comments").read();
+            }).fail(function (jqXHR, textStatus) {
+                Ephron.WebApp.Common.showFinanceAlert("Something went wrong while submitting your request, Please enter comments.");
+            }).always(function () {});
         });
+    });
 </script>
