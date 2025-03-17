@@ -9,6 +9,35 @@
     <link rel="stylesheet" href="@Url.Content("~/Nova.Web.styles.css")" asp-append-version="true" />
 </head>
 <body>
+    <div class="toast-container">
+        <div class="position-fixed top-0 end-0 p-3" style="z-index: 11">
+            <div class="toast" role="alert" aria-live="assertive" aria-atomic="true" id="ConfirmAlert">
+                <div class="toast-header">
+                    <i class="far fa-bell text-muted mr-2"></i>
+                    <strong class="me-auto"></strong>
+                    <button type="button" class="btn-close" data-dismiss="toast" aria-label="Close">
+                        <span>×</span>
+                    </button>
+                </div>
+                <div class="toast-body">
+                    <p id="ConfirmAlertBodyText"> </p>
+                    <button type="button" class="btn btn-primary btn-sm" id="btnOK">Ok</button>
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="toast" id="btnCancel">Cancel</button>
+                </div>
+            </div>
+
+
+            <div class="toast" role="alert" aria-live="assertive" aria-atomic="true" id="NotificationModal">
+                <div class="toast-header">
+                    <strong class="me-auto">Notification</strong>
+                    <button type="button" class="btn-close" data-dismiss="toast" aria-label="Close">
+                        <span>×</span>
+                    </button>
+                </div>
+                <div class="toast-body" id="NotificationBodytext"></div>
+            </div>
+        </div>
+    </div>
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
             <div class="container-fluid">
@@ -56,3 +85,80 @@
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
+
+<script>
+    customConfirm = function (option, confirmcallback, cancelcallback) {
+
+        var title = option.title || 'Confirm';
+        var message = option.message || '';
+        var autohide = option.autohide || false;
+
+        $('#ConfirmAlert .mr-auto').html(title);
+        $('#ConfirmAlert #ConfirmAlertBodyText').html(message);
+
+        $('#ConfirmAlert button.confirm').unbind();
+
+        if (confirmcallback != null) {
+            $('#ConfirmAlert #btnOK').click(function () {
+                $('#ConfirmAlert').toast('hide');
+
+                return confirmcallback(true);
+
+            });
+        }
+
+        if (cancelcallback != null) {
+            $('#ConfirmAlert #btnCancel').click(function () {
+                $('#ConfirmAlert').toast('hide');
+
+                return cancelcallback(true);
+
+            });
+        }
+
+        // Open dialogue
+        $('#ConfirmAlert').toast('show');
+    };
+
+
+    function showsuccess(text) {
+        $("#NotificationBodytext").html('');
+        $("#NotificationBodytext").html(text);
+        $("#NotificationModal").toast('show');
+
+        setTimeout(function () { $("#NotificationModal").toast('hide'); }, 3000);
+
+    }
+
+    function showfailure(text) {
+
+        $("#NotificationBodytext").html('');
+        $("#NotificationBodytext").html(text);
+        $("#NotificationModal").toast('show');
+
+        setTimeout(function () { $("#NotificationModal").toast('hide'); }, 3000);
+    }
+</script>
+
+<script type="text/javascript">
+
+    $(document).ready(function () {
+    @if (!String.IsNullOrEmpty(ViewBag.SuccessMessage))
+    {
+        @:showsuccess('@ViewBag.SuccessMessage');
+    }
+    @if (!String.IsNullOrEmpty(ViewBag.ErrorMessage))
+    {
+        @:showsuccess('@ViewBag.ErrorMessage');
+    }
+                // $('#LogOutBtn').attr("style", "opacity:0; display:block ");
+                // $('#ResetBtn').attr("style", "opacity:0; display:block ");
+                // $('#menubar').attr("style", "opacity:0; display:block ");
+            });
+    function showToast(message) {
+        $('#NotificationModal').removeClass('hide');
+        $('#NotificationModal').addClass('show');
+        $('#dvtoastbody').html(message);
+    }
+
+</script>

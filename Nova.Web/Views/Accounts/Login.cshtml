@@ -57,7 +57,7 @@
 
 
     <form asp-action="ForgetPassword" asp-controller="Accounts" method="POST" data-ajax="true" data-ajax-update="result" asp-antiforgery="true" data-ajax-success="success">
-        
+
         <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-sm">
                 <div class="modal-content">
@@ -81,7 +81,7 @@
                 </div>
             </div>
         </div>
-       
+
     </form>
 
 
@@ -148,77 +148,58 @@
         <script src="@Url.Content("~/assets/js/script.js")"></script>
         <!-- Plugin used-->
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-ajax-unobtrusive/3.2.6/jquery.unobtrusive-ajax.js" integrity="sha256-v2nySZafnswY87um3ymbg7p9f766IQspC5oqaqZVX2c=" crossorigin="anonymous"></script>
-        <script>
-           
-                  success = function (result) {
-                window.location.href = result.url;
-            };
-                 
 
-        </script>
-        <script type="text/javascript">
-
-                        fetch('/Accounts/ResetPasswords', {
-                method: 'POST',
-                body: new URLSearchParams(new FormData(document.querySelector('form')))
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.url) {
-                    window.location.href = data.url;
-                } else {
-                    // Handle error or show a message
-                    console.error('Error: URL not found in response');
-                }
-            })
-            .catch(error => console.error('Error:', error));
-
-               fetch('/Accounts/ForgetPassword', {
-                method: 'POST',
-                body: new URLSearchParams(new FormData(document.querySelector('form')))
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.url) {
-                    window.location.href = data.url;
-                } else {
-                    // Handle error or show a message
-                    console.error('Error: URL not found in response');
-                }
-            })
-            .catch(error => console.error('Error:', error));
-
-
-
-            
-               $('#liveToast').show('toast');
-            $("#ShowModal").click(function () {
-                $('#exampleModal').modal('show');
-            });
-
-            $("#btnReset").click(function () {
-                $.ajax({
-                    url: "/LogIn/ForgotPassword",
-
-                    contentType: "application/json",
-                    dataType: "json",
-                    type: "Post",
-                    headers: {
-
-                    }
-                }).done(function (data) {
-                    $("#modalcomments").modal('hide');
-                    viewModel.get("comments").read();
-                    (<HTMLFormElement>frmComment[0]).reset();
-                    alert('hell');
-                }).fail(function (jqXHR, textStatus) {
-                    Ephron.WebApp.Common.showFinanceAlert("Something went wrong while submitting your request , Please enter comments.");
-                }).always(function () {
-
-                });
-            });
-
-        </script>
     </div>
 </body>
 </html>
+<script>
+
+          success = function (result) {
+              debugger;
+        window.location.href = result.url;
+    };
+
+</script>
+<script>
+    $(document).ready(function () {
+        // Check for success message
+        var successMessage = '@TempData["SuccessMessage"]';
+        if (successMessage) {
+            showToast(successMessage);
+        }
+
+        // Check for error message
+        var errorMessage = '@TempData["ErrorMessage"]';
+        if (errorMessage) {
+            showToast(errorMessage);
+        }
+
+        function showToast(message) {
+            var toastEl = document.getElementById('liveToast');
+            var toastBody = toastEl.querySelector('.toast-body');
+            toastBody.textContent = message;
+            var toast = new bootstrap.Toast(toastEl);
+            toast.show();
+        }
+
+        $("#ShowModal").click(function () {
+            $('#exampleModal').modal('show');
+        });
+
+       $("#btnReset").click(function () {
+        $.ajax({
+            url: "/LogIn/ForgotPassword",
+            contentType: "application/json",
+            dataType: "json",
+            type: "Post",
+            headers: {}
+        }).done(function (data) {
+            $("#modalcomments").modal('hide');
+            viewModel.get("comments").read();
+            (<HTMLFormElement>frmComment[0]).reset();
+        }).fail(function (jqXHR, textStatus) {
+            Ephron.WebApp.Common.showFinanceAlert("Something went wrong while submitting your request, Please enter comments.");
+        }).always(function () {});
+    });
+        });
+</script>

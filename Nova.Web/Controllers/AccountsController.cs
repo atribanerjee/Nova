@@ -27,6 +27,20 @@ namespace Nova.Web.Controllers
         {
             UserViewModel model = new UserViewModel();
             var data = await _db.Roles.ToListAsync();
+            if (TempData["SuccessMessage"] != null)
+            {
+                if (!String.IsNullOrEmpty(Convert.ToString(TempData["SuccessMessage"])))
+                {
+                    ViewBag.SuccessMessage = Convert.ToString(TempData["SuccessMessage"]);
+                }
+            }
+            if (TempData["ErrorMessage"] != null)
+            {
+                if (!String.IsNullOrEmpty(Convert.ToString(TempData["ErrorMessage"])))
+                {
+                    ViewBag.ErrorMessage = Convert.ToString(TempData["ErrorMessage"]);
+                }
+            }
             if (Request.Cookies["NovaLogin"] != null)
             {
                 model.RememberMe = true;
@@ -77,10 +91,18 @@ namespace Nova.Web.Controllers
 
                     return Json(new { url = Url.Action("Index", "Home") });
                 }
+                else
+                {
+
+                    TempData["ErrorMessage"] = "Invalid user id or password";
+                    return Json(new { url = Url.Action("Login", "Accounts") });
+
+                }
 
 
             }
-            return Json(new { url = Url.Action("Index", "Home") });
+            TempData["ErrorMessage"] = "Model state is invalid.";
+            return Json(new { url = Url.Action("Login", "Accounts") });
 
         }
 
