@@ -160,7 +160,7 @@ namespace Nova.Web.Models
                                        Lastname = u.Lastname,
                                        Email = u.Email,
                                        Username = u.Username
-                                   }).FirstOrDefaultAsync();
+                                   }).FirstOrDefaultAsync()?? new UserViewModel();
                 }
             }
             catch (Exception ex)

@@ -32,7 +32,7 @@
 
         public object GetSessionValue(string sKey)
         {
-            return GetSessionValue(sKey,null);
+            return GetSessionValue(sKey, null);
         }
 
         public object GetSessionValue(string sKey, object? oReturnValue = null)
@@ -76,15 +76,13 @@
 
         public async Task SetCookies(string key, string value, int? expireTime)
         {
-            await Task.Run(() =>
-            {
-                CookieOptions option = new CookieOptions();
-                if (expireTime.HasValue)
-                    option.Expires = DateTime.Now.AddDays(expireTime.Value);
-                else
-                    option.Expires = DateTime.Now.AddMilliseconds(10);
-                _contextAccessor.HttpContext?.Response.Cookies.Append(key, value, option);
-            });
+            CookieOptions option = new CookieOptions();
+            if (expireTime.HasValue)
+                option.Expires = DateTime.Now.AddDays(expireTime.Value);
+            else
+                option.Expires = DateTime.Now.AddMinutes(30);
+
+            _contextAccessor.HttpContext?.Response.Cookies.Append(key, value, option);
         }
 
         public async Task RemoveCookies(string key)

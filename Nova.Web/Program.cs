@@ -18,6 +18,8 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages().AddRazorRuntimeCompilation();
 builder.Services.AddScoped<IUserServices, UserServices>();
 builder.Services.AddScoped<IUtilityServices, UtilityServices>();
+builder.Services.AddScoped<IuserRoleService, UserRole>();
+
 builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -26,6 +28,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.LoginPath = "/Accounts/Login";
         options.LogoutPath = "/Accounts/LogOut";
         options.ExpireTimeSpan = TimeSpan.FromDays(30); // Set default expiration time
+        options.SlidingExpiration = true;
     });
 
 

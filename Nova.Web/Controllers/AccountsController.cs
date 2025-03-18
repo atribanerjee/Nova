@@ -40,9 +40,11 @@ namespace Nova.Web.Controllers
                     ViewBag.ErrorMessage = Convert.ToString(TempData["ErrorMessage"]);
                 }
             }
+          
             if (Request.Cookies["NovaLogin"] != null)
             {
                 model.RememberMe = true;
+                model.Username = await _Utility.GetCookies("NovaLogin");
             }
             else
             {
@@ -78,10 +80,11 @@ namespace Nova.Web.Controllers
 
                     await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity), authProperties);
 
+                    
                     if (model.RememberMe)
                     {
                         await _Utility.SetCookies("NovaLogin", model.Username, 30);
-                        await _Utility.SetCookies("NovaLogin", model.Password, 30);
+                       
                     }
                     else
                     {

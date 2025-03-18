@@ -1,0 +1,97 @@
+﻿@model List<Nova.Web.ViewModels.UserRoleViewModel>
+@inject Nova.DB.NovaDBContext _db;
+@{
+    ViewData["Title"] = "UserRoleList";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    Int32 x = 1;
+
+}
+
+
+<div class="app-content-holder general-gaping ">
+
+    <!-- BEGIN row -->
+
+    <div class="row ">
+
+        <!-- BEGIN col-12 -->
+        <div class="col-xl-12">
+
+            <!-- BEGIN #responsiveTables -->
+            <div id="responsiveTables" class="mb-5 ">
+                @if (Model != null && Model.Count > 0)
+                {
+
+                    <div class="card card-general-table">
+                        <div class="card-body px-0 py-0">
+
+                           @*  <div class="row row-head ">
+                                @await Html.PartialAsync("_PageSize", psvm)
+                            </div> *@
+
+                            <div class="table-responsive">
+
+                                <table class="table table-firstRow mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col"></th>
+                                            <th scope="col">Role</th>
+                                            <th scope="col">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+
+                                        @foreach (Nova.Web.ViewModels.UserRoleViewModel item in Model)
+                                        {
+                                          @*   pageCount = item.TotalRecords / item.PageSize;
+                                            if (item.TotalRecords % item.PageSize != 0)
+                                            {
+                                                pageCount = pageCount + 1;
+                                            }
+                                            pageNumber = item.PageNumber;
+                                            pageSize = item.PageSize;
+                                            pgdvm.pagecount = pageCount;
+                                            pgdvm.pagenumber = pageNumber; *@
+
+                                            <tr>
+                                                <th scope="row"></th>
+                                                <td>@item.Rolename</td>
+                                                <td class="dt-buttons ">
+                                                    <a href="#" onclick="fnUpdateRole('@item.Id','@item.Rolename')" class="btn ">
+                                                        <i class="fas fa-pen-nib"></i>
+                                                    </a>
+                                                   
+                                                        @if (item.IsDeleted)
+                                                        {
+                                                            <a href="javascript:void(0);" class="btn " id="Delete_@item.Id" onclick='DeleteRole(@item.Id);'>
+                                                                <i class="fas fa-trash"></i>
+                                                            </a>
+                                                        }
+                                                    
+
+                                                </td>
+                                            </tr>
+                                        }
+
+                                    </tbody>
+                                </table>
+
+                            </div>
+
+                        
+
+                        </div>
+                    </div>
+
+                }
+            </div>
+
+        </div>
+        <!-- END #responsiveTables -->
+
+    </div>
+    <!-- END col-12-->
+
+</div>
+
+
