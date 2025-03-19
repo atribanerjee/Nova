@@ -5,6 +5,7 @@ using Nova.Web.Interfaces;
 using Nova.Web.Utitlity;
 using Nova.Web.ViewModels;
 using System.Buffers;
+using System.Threading.Tasks;
 
 namespace Nova.Web.Controllers
 {
@@ -105,6 +106,73 @@ namespace Nova.Web.Controllers
                 data = _List
             };
             return new JsonResult(jsonData);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Add()
+        {
+            UserRoleViewModel model = new UserRoleViewModel();
+            return await Task.FromResult(View(model));
+        }
+
+
+        [HttpPost]
+        public async Task<IActionResult> Add(String RoleName)
+        {
+            UserRoleViewModel model = new UserRoleViewModel();
+
+            if (!String.IsNullOrEmpty(RoleName))
+            {
+                model.Rolename = RoleName;
+
+                if (! await _UserRole.CheckDuplicateRoleName(RoleName))
+                {
+                    if (await _UserRole.AddNewRole(model))
+                        return Json(new { Result = true, Message = "Role saved." }, new Newtonsoft.Json.JsonSerializerSettings());
+                    else
+                        return Json(new { Result = false, Message = "Role saving failed." }, new Newtonsoft.Json.JsonSerializerSettings());
+                }
+                else
+                {
+                    return Json(new { Result = false, Message = "Role already exists." }, new Newtonsoft.Json.JsonSerializerSettings());
+                }
+            }
+            else
+            {
+                return Json(new { Result = false, Message = "Please input value." }, new Newtonsoft.Json.JsonSerializerSettings());
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> CheckDulicateExceptMe(Int32 RoleID, String RoleName)
+        {
+            UserRoleViewModel model = new UserRoleViewModel();
+
+            if (!String.IsNullOrEmpty(RoleName))
+            {
+                if (await _UserRole.CheckDuplicateRoleNameExceptMe(RoleID, RoleName))
+                {
+
+                    return Json(new { Result = true, Message = "Duplicate Value" }, new Newtonsoft.Json.JsonSerializerSettings());
+                }
+            }
+
+            return Json(new { Result = false, Message = "Value not exist" }, new Newtonsoft.Json.JsonSerializerSettings());
+        }
+        public async Task<IActionResult> CheckDulicate(String RoleName)
+        {
+            UserRoleViewModel model = new UserRoleViewModel();
+
+            if (!String.IsNullOrEmpty(RoleName))
+            {
+                if (await _UserRole.CheckDuplicateRoleName(RoleName))
+                {
+
+                    return Json(new { Result = true, Message = "Duplicate Value" }, new Newtonsoft.Json.JsonSerializerSettings());
+                }
+            }
+
+            return Json(new { Result = false, Message = "Value not exist" }, new Newtonsoft.Json.JsonSerializerSettings());
         }
 
 

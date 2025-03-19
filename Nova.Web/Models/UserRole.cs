@@ -49,5 +49,79 @@ namespace Nova.Web.Models
             }
             return _List;
         }
+
+        public async Task<Boolean> CheckDuplicateRoleName(String RoleName)
+        {
+            try
+            {
+                if (!String.IsNullOrEmpty(RoleName))
+                {
+                    var entity = await Task.Run(() => _Db.Roles
+                        .Where(x => x.Rolename.ToLower() == RoleName.ToLower() && !x.IsDeleted)
+                        .FirstOrDefault());
+
+                    if (entity != null && entity.Id > 0)
+                    {
+                        return true;
+                    }
+                }
+            }
+            catch (Exception Ex)
+            {
+                
+            }
+
+            return false;
+        }
+
+        public async Task<Boolean> AddNewRole(UserRoleViewModel model)
+        {
+            bool Result = false;
+            try
+            {
+                if (!String.IsNullOrEmpty(model.Rolename))
+                {
+                    var Entity = new Nova.DB.POCO.Roles();
+                    Entity.Rolename = model.Rolename;
+                    Entity.IsDeleted = false;
+                    _Db.Roles.Add(Entity);
+                    await _Db.SaveChangesAsync(); // Use await here
+                    Result = true;
+                }
+            }
+            catch (Exception Ex)
+            {
+            }
+
+            return Result;
+        }
+
+        public async Task<Boolean> CheckDuplicateRoleNameExceptMe(int RoleID, String RoleName)
+        {
+            try
+            {
+                if (!String.IsNullOrEmpty(RoleName))
+                {
+                    var entity = await Task.Run(() => _Db.Roles
+                        .Where(x => x.Rolename.ToLower() == RoleName.ToLower()
+                                    && x.Id != RoleID
+                                    && !x.IsDeleted)
+                        .FirstOrDefault());
+
+                    if (entity != null && entity.Id > 0)
+                    {
+                        return true;
+                    }
+                }
+            }
+            catch (Exception Ex)
+            {
+                //WriteLog("HealthGauge.Web.Models.RoleModel - CheckDuplicateRoleName", Ex.Message);
+            }
+
+            return false;
+        }
+      
+
     }
 }
