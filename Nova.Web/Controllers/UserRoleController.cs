@@ -152,14 +152,16 @@ namespace Nova.Web.Controllers
                     else
                     {
                         //return Json(new { Result = false, Message = "Role saving failed." }, new Newtonsoft.Json.JsonSerializerSettings());
-                        return Json(new { Result = false, Message = "Role saving failed." });
+                      //  return Json(new { Result = false, Message = "Role saving failed." });
+                        return Ok(new { Result = false, Message = "Role saving failed." });
                     }
                        
                 }
                 else
                 {
                     //return Json(new { Result = false, Message = "Role already exists." }, new Newtonsoft.Json.JsonSerializerSettings());
-                    return Json(new { Result = false, Message = "Role already exists." });
+                    return Ok(new { Result = false, Message = "Role already exists." });
+                  //  return Json(new { Result = false, Message = "Role already exists." });
                 }
             }
             else
