@@ -24,6 +24,7 @@ namespace Nova.Web.Controllers
         }
         public IActionResult Index()
         {
+
             return View();
         }
 
@@ -112,6 +113,20 @@ namespace Nova.Web.Controllers
         public async Task<IActionResult> Add()
         {
             UserRoleViewModel model = new UserRoleViewModel();
+            if (TempData["SuccessMessage"] != null)
+            {
+                if (!String.IsNullOrEmpty(Convert.ToString(TempData["SuccessMessage"])))
+                {
+                    ViewBag.SuccessMessage = Convert.ToString(TempData["SuccessMessage"]);
+                }
+            }
+            if (TempData["ErrorMessage"] != null)
+            {
+                if (!String.IsNullOrEmpty(Convert.ToString(TempData["ErrorMessage"])))
+                {
+                    ViewBag.ErrorMessage = Convert.ToString(TempData["ErrorMessage"]);
+                }
+            }
             return await Task.FromResult(View(model));
         }
 
@@ -128,18 +143,29 @@ namespace Nova.Web.Controllers
                 if (! await _UserRole.CheckDuplicateRoleName(RoleName))
                 {
                     if (await _UserRole.AddNewRole(model))
-                        return Json(new { Result = true, Message = "Role saved." }, new Newtonsoft.Json.JsonSerializerSettings());
+                    {
+                        return Ok(new { Result = true, Message = "Role saved." });
+                        //  return Json(new { Result = true, Message = "Role saved." }, new Newtonsoft.Json.JsonSerializerSettings());
+                       // return Json(new { Result = true, Message = "Role saved." });
+                    }
+                       
                     else
-                        return Json(new { Result = false, Message = "Role saving failed." }, new Newtonsoft.Json.JsonSerializerSettings());
+                    {
+                        //return Json(new { Result = false, Message = "Role saving failed." }, new Newtonsoft.Json.JsonSerializerSettings());
+                        return Json(new { Result = false, Message = "Role saving failed." });
+                    }
+                       
                 }
                 else
                 {
-                    return Json(new { Result = false, Message = "Role already exists." }, new Newtonsoft.Json.JsonSerializerSettings());
+                    //return Json(new { Result = false, Message = "Role already exists." }, new Newtonsoft.Json.JsonSerializerSettings());
+                    return Json(new { Result = false, Message = "Role already exists." });
                 }
             }
             else
             {
-                return Json(new { Result = false, Message = "Please input value." }, new Newtonsoft.Json.JsonSerializerSettings());
+                // return Json(new { Result = false, Message = "Please input value." }, new Newtonsoft.Json.JsonSerializerSettings());
+                return Json(new { Result = false, Message = "Please input value." });
             }
         }
 
@@ -153,11 +179,12 @@ namespace Nova.Web.Controllers
                 if (await _UserRole.CheckDuplicateRoleNameExceptMe(RoleID, RoleName))
                 {
 
-                    return Json(new { Result = true, Message = "Duplicate Value" }, new Newtonsoft.Json.JsonSerializerSettings());
+                    //  return Json(new { Result = true, Message = "Duplicate Value" }, new Newtonsoft.Json.JsonSerializerSettings());
+                    return Json(new { Result = true, Message = "Duplicate Value" });
                 }
             }
 
-            return Json(new { Result = false, Message = "Value not exist" }, new Newtonsoft.Json.JsonSerializerSettings());
+            return Json(new { Result = false, Message = "Value not exist" });
         }
         public async Task<IActionResult> CheckDulicate(String RoleName)
         {
@@ -168,11 +195,11 @@ namespace Nova.Web.Controllers
                 if (await _UserRole.CheckDuplicateRoleName(RoleName))
                 {
 
-                    return Json(new { Result = true, Message = "Duplicate Value" }, new Newtonsoft.Json.JsonSerializerSettings());
+                    return Json(new { Result = true, Message = "Duplicate Value" });
                 }
             }
 
-            return Json(new { Result = false, Message = "Value not exist" }, new Newtonsoft.Json.JsonSerializerSettings());
+            return Json(new { Result = false, Message = "Value not exist" });
         }
 
 

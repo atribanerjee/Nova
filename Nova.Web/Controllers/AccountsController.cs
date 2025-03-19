@@ -271,6 +271,20 @@ namespace Nova.Web.Controllers
             }
             return Json(new { Result = true, Message = "Missing data." });
         }
+        [HttpGet]
+        public async Task<JsonResult> Checkpassword(String Password)
+        {
+            // string? uid = _Utility.GetSessionValue("LoggedInUserID").ToString();
+            int? uid = HttpContext.Session.GetInt32("LoggedInUserID");
+            if (uid != null && await _Service.CheckPassword(uid, Password))
+            {
+                return Json(new { Result = true, Message = "New and old password same" });
+            }
+            else
+            {
+                return Json(new { Result = false, Message = "" });
+            }
+        }
 
 
         private void RemoveModelStateItem(String data)

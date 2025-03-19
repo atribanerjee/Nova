@@ -205,6 +205,28 @@ namespace Nova.Web.Models
             return model;
         }
 
+
+        public async Task<Boolean> CheckPassword(int? userid, string password)
+        {
+            Boolean retresult = false;
+            try
+            {
+                string encryptedPassword = await _Utility.Encrypt(password);
+                var entity = (from u in _Db.Users
+                              where (u.Id == userid && u.Password == encryptedPassword)
+                              select new { u }).FirstOrDefault();
+                if (entity != null)
+                {
+                    retresult = true;
+                }
+            }
+            catch (Exception Ex)
+            {
+                // WriteLog("HealthGauge.Web.Models.UserModel - UpdatepasswordforUser", Ex.Message);
+            }
+            return retresult;
+        }
+
         public void LogOut()
         {
             try

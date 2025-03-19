@@ -4,6 +4,18 @@
     ViewData["Title"] = "UserRoleList";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
+<div class="toast-container position-fixed top-0 end-0 p-3">
+    <div id="liveToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header">
+            <strong class="me-auto">Alert</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div id="toastmessage" class="toast-body">
+           
+        </div>
+    </div>
+</div>
+
 <div class="modal fade modalT" id="AddRoleModal">
     <div class="modal-dialog ">
         <div class="modal-content">
@@ -165,10 +177,32 @@
 
     $(document).ready(function () {
 
-        $("#btnSave").click(function () {
-            debugger;
-            if ($("#InputRoleName").val() != '') {
+          var successMessage = '@TempData["SuccessMessage"]';
+        if (successMessage) {
+            showToast(successMessage);
+        }
 
+        // Check for error message
+        var errorMessage = '@TempData["ErrorMessage"]';
+        if (errorMessage) {
+            showToast(errorMessage);
+        }
+
+        function showToast(message) {
+            var toastEl = document.getElementById('liveToast');
+            var toastBody = toastEl.querySelector('.toast-body');
+            toastBody.textContent = message;
+            var toast = new bootstrap.Toast(toastEl);
+            toast.show();
+        }
+
+
+
+
+        $("#btnSave").click(function () {
+           
+            if ($("#InputRoleName").val() != '') {
+               // fnCloseRoleModal();
                 if (LastUpdateRoleID > 0) { //Update Role
 
                     $("#InputRoleName-error").addClass('none');
@@ -180,31 +214,34 @@
 
                     $.ajax({
                         type: "GET",
-                        url: '@Url.Action("CheckDulicate", "Role")',
+                        url: '@Url.Action("CheckDulicate", "UserRole")',
                         data: { 'RoleName': $("#InputRoleName").val() },
                         success: function (result) {
+                            debugger;
                             if (result.Result) {
                                 $("#InputRoleName-error").removeClass('none');
                                 $("#InputRoleName-error-msg").html("This role name already exist");
-
+                                showToast("This role name already exist");
                             } else {
 
                                 $.ajax({
                                     type: "POST",
-                                    url: '@Url.Action("Add", "Role")',
+                                    url: '@Url.Action("Add", "UserRole")',
                                     data: { 'RoleName': $("#InputRoleName").val() },
                                     success: function (result) {
-
+                                        debugger;
                                         $("#AddRoleModal").modal('hide');
 
                                         $("#InputRoleName").val('');
-
+                                     
+                                        showToast('Role created successfully.')
                                         if (result.Result) {
-                                            showsuccess('Role created successfully.');
+                                            debugger;
+                                            showToast('Role created successfully.');
                                             location.reload();
                                         }
                                         else {
-                                            showsuccess(result.Message);
+                                            showToast('Role creatation failed.');
                                         }
                                     },
                                     error: function (ex) {
@@ -248,7 +285,7 @@
          debugger;
         $.ajax({
             type: "GET",
-            url: '@Url.Action("CheckDulicateExceptMe", "Role")',
+            url: '@Url.Action("CheckDulicateExceptMe", "UserRole")',
             data: { 'RoleID': LastUpdateRoleID, 'RoleName': $("#InputRoleName").val() },
             success: function (result) {
 
@@ -276,6 +313,12 @@
         $("#InputRoleName").val('');
         $("#AddRoleModal").modal('show');
         $("#InputRoleName-error").addClass('none');
+    }
+    function fnCloseRoleModal() {
+       LastUpdateRoleID = 0;
+        $("#InputRoleName").val('');
+        $("#AddRoleModal").modal('hide');
+        $("#InputRoleName-error").removeClass('none');
     }
     function fnUpdateRole(id, rolename) {
         $('#hdnRoleId').val(id);

@@ -11,6 +11,7 @@ namespace Nova.Web.Interfaces
         public Task<bool> UpdatePasswordForUser(int UserID, string Password);
         public Task<UserViewModel> GetUsersDetailsByID(int UserID);        
         public UserViewModel GetUserDataFromSession();
+        Task<Boolean> CheckPassword(int? userid, string password);
         public void LogOut();
     }
 }
