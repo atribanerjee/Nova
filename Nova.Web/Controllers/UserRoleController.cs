@@ -51,9 +51,9 @@ namespace Nova.Web.Controllers
                             ViewBag.ErrorMessage = Convert.ToString(TempData["ErrorMessage"]);
                         }
                     }
-                   
+
                     uid = _Service.GetUserDataFromSession().Id.ToString();
-                 
+
                     model.PageNumber = 0;
                     model.PageSize = 10;
                     return View(await _UserRole.GetAllRoleList(model, ""));
@@ -61,7 +61,7 @@ namespace Nova.Web.Controllers
                 else
                 {
                     uid = "1";
-                   
+
                     model.PageNumber = 0;
                     model.PageSize = 10;
                     return View(await _UserRole.GetAllRoleList(model, ""));
@@ -101,7 +101,7 @@ namespace Nova.Web.Controllers
 
             var jsonData = new
             {
-                draw=draw,
+                draw = draw,
                 recordsFiltered = totalRecords,
                 recordsTotal = totalRecords,
                 data = _List
@@ -130,7 +130,6 @@ namespace Nova.Web.Controllers
             return await Task.FromResult(View(model));
         }
 
-
         [HttpPost]
         public async Task<IActionResult> Add(String RoleName)
         {
@@ -140,34 +139,67 @@ namespace Nova.Web.Controllers
             {
                 model.Rolename = RoleName;
 
-                if (! await _UserRole.CheckDuplicateRoleName(RoleName))
+                if (!await _UserRole.CheckDuplicateRoleName(RoleName))
                 {
                     if (await _UserRole.AddNewRole(model))
                     {
                         return Ok(new { Result = true, Message = "Role saved." });
                         //  return Json(new { Result = true, Message = "Role saved." }, new Newtonsoft.Json.JsonSerializerSettings());
-                       // return Json(new { Result = true, Message = "Role saved." });
+                        // return Json(new { Result = true, Message = "Role saved." });
                     }
-                       
+
                     else
                     {
                         //return Json(new { Result = false, Message = "Role saving failed." }, new Newtonsoft.Json.JsonSerializerSettings());
-                      //  return Json(new { Result = false, Message = "Role saving failed." });
+                        //  return Json(new { Result = false, Message = "Role saving failed." });
                         return Ok(new { Result = false, Message = "Role saving failed." });
                     }
-                       
+
                 }
                 else
                 {
                     //return Json(new { Result = false, Message = "Role already exists." }, new Newtonsoft.Json.JsonSerializerSettings());
                     return Ok(new { Result = false, Message = "Role already exists." });
-                  //  return Json(new { Result = false, Message = "Role already exists." });
+                    //  return Json(new { Result = false, Message = "Role already exists." });
                 }
             }
             else
             {
                 // return Json(new { Result = false, Message = "Please input value." }, new Newtonsoft.Json.JsonSerializerSettings());
                 return Json(new { Result = false, Message = "Please input value." });
+            }
+        }
+        [HttpGet]
+        public async Task<ActionResult> Edit(int ID)
+        {
+            UserRoleViewModel model = new UserRoleViewModel();
+            model = await _UserRole.GetRoleDetailByID(ID);
+            return View(model);
+        }
+        [HttpPost]
+        public async Task<IActionResult> Edit(Int32 RoleID, String RoleName)
+        {
+            UserRoleViewModel model = new UserRoleViewModel();
+
+            if (!String.IsNullOrEmpty(RoleName))
+            {
+                model.Id = RoleID;
+                model.Rolename = RoleName;
+
+                if (await _UserRole.UpdateRole(model))
+                {
+                    return Ok(new { Result = true, Message = "Role updated." });
+                }
+
+                else
+                {
+                    return Ok(new { Result = false, Message = "Role  update failed." });
+                }
+
+            }
+            else
+            {
+                return Ok(new { Result = false, Message = "Please input value." });
             }
         }
 
@@ -203,6 +235,25 @@ namespace Nova.Web.Controllers
 
             return Json(new { Result = false, Message = "Value not exist" });
         }
+
+        #region:: 4.  Delete
+        [HttpPost]
+        public async Task<IActionResult> Delete(int ID)
+        {
+            if (await _UserRole.DeleteRolebyID(ID))
+            {
+                return Ok(new { Result = true, Message = "Role deleted successfully." });
+               // return Json(new { Result = true, Message = "Role deleted successfully." });
+            }
+            else
+            {
+                return Ok(new { Result = true, Message = "Role delete failed." });
+               // return Json(new { Result = false, Message = "Role delete failed." }, new Newtonsoft.Json.JsonSerializerSettings());
+            }
+
+        }
+
+        #endregion
 
 
     }

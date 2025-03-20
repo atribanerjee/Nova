@@ -4,6 +4,10 @@
     ViewData["Title"] = "UserRoleList";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
+
+<script src="@Url.Content("~/lib/jquery/dist/jquery.min.js")"></script>
+
+
 <div class="toast-container position-fixed top-0 end-0 p-3">
     <div id="liveToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
         <div class="toast-header">
@@ -16,6 +20,7 @@
 </div>
 
 <div class="modal fade modalT" id="AddRoleModal">
+    <input type="hidden" id="hdnRoleId" value="rolelist" />
     <div class="modal-dialog ">
         <div class="modal-content">
             <div class="modal-header">
@@ -28,7 +33,7 @@
                     <div class="form-group group-headein row">
                         <label class="col-sm-4 pt-2 ">&nbsp;</label>
                         <div class="col-sm-8">
-                            <h5 class="modal-title">Add New Role</h5>
+                            <h5 id="AddorUpdateRole" class="modal-title">Add New Role</h5>
                         </div>
                     </div>
                     <div class="form-group row">
@@ -44,7 +49,7 @@
                         <label class="col-sm-4 ">&nbsp;</label>
                         <div class="col-sm-8">
                             <button type="button" class="btn btn-default" data-dismiss="modal">
-                                <a href="javascript:void(0);" class="btn-inny btn-red">Cancel</a>
+                                <a id="Closebtn" href="javascript:void(0);" class="btn-inny btn-red">Cancel</a>
                             </button>
                             <button id="btnSave" type="button" class="btn btn-default">
                                 <a href="javascript:void(0);" class="btn-inny">Save</a>
@@ -134,17 +139,16 @@
                                             <tr>
                                                 <th scope="row"></th>
                                                 <td>@item.Rolename</td>
-                                                <td class="dt-buttons ">
+                                                <td class="dt-buttons">
                                                     <a href="#" onclick="fnUpdateRole('@item.Id','@item.Rolename')" class="btn ">
                                                         <i class="fas fa-pen-nib"></i>
                                                     </a>
                                                    
-                                                        @if (item.IsDeleted)
-                                                        {
+                                                        
                                                             <a href="javascript:void(0);" class="btn " id="Delete_@item.Id" onclick='DeleteRole(@item.Id);'>
                                                                 <i class="fas fa-trash"></i>
                                                             </a>
-                                                        }
+                                                     
                                                     
 
                                                 </td>
@@ -171,9 +175,10 @@
     <!-- END col-12-->
 
 </div>
-<script src="@Url.Content("~/lib/jquery/dist/jquery.min.js")"></script>
-<script type="text/javascript">
 
+<script type="text/javascript">
+   var  LastUpdateRoleID = 0;
+    var LastUpdateRoleName="";
     $(document).ready(function () {
 
           var successMessage = '@TempData["SuccessMessage"]';
@@ -195,6 +200,9 @@
             toast.show();
         }
 
+        $("#Closebtn").click(function () {
+                $("#AddRoleModal").modal('hide');
+        });
 
 
 
@@ -308,10 +316,11 @@
 
 
     function fnShowRoleModal() {
-       LastUpdateRoleID = 0;
+      
         $("#InputRoleName").val('');
         $("#AddRoleModal").modal('show');
         $("#InputRoleName-error").addClass('none');
+        $('#AddorUpdateRole').html('Add new Role');
     }
     function fnCloseRoleModal() {
        LastUpdateRoleID = 0;
@@ -320,29 +329,80 @@
         $("#InputRoleName-error").removeClass('none');
     }
     function fnUpdateRole(id, rolename) {
+      
+           LastUpdateRoleID =id;
+             LastUpdateRoleName=rolename;
         $('#hdnRoleId').val(id);
-        $('#txtRoleName').val(rolename);
+      //  $('#txtRoleName').val(rolename);
+         $('#InputRoleName').val(rolename);
         $('#AddRoleModal').modal('show');
+         $('#AddorUpdateRole').html('Update Role');
     }
-    function DeleteRole(id) {
-        var result = confirm("Are you sure you want to delete this role?");
-        if (result) {
-            $.ajax({
-                type: "POST",
-                url: "/UserRole/DeleteRole",
-                data: { id: id },
-                success: function (data) {
-                    if (data == "Success") {
-                        alert("Role deleted successfully.");
-                        location.reload();
-                    }
-                    else {
-                        alert("Role not deleted.");
-                    }
+      function fnUpdateRoleNameByID(LastUpdateRoleID) {
+          debugger;
+        $.ajax({
+            type: "POST",
+             url: '@Url.Action("Edit", "UserRole")',
+             data: { 'RoleID': LastUpdateRoleID, 'RoleName': $("#InputRoleName").val() },
+            success: function (result) {
+              
+                LastUpdateRoleID = 0;
+                $("#AddRoleModal").modal('hide');
+                $("#InputRoleName").val('');
+
+                 if (result.result) {
+                      showsuccess(result.message);
+                    setTimeout(function () { location.reload(); }, 500);
                 }
-            });
-        }
+                else {
+                    showsuccess(result.Message);
+                }
+            },
+            error: function (ex) {
+                if (ex.status === 401) {
+                    //window.location.replace("/account/login");
+                }
+            }
+
+        });
     }
+
+
+      function DeleteRole(RoleID) {
+         //
+         var cofirmmessage = 'Are you sure you want to delete this?';
+         var successmessage = 'Data deleted successfully.';
+         var $element = $(this);
+         customConfirm({ message: cofirmmessage },
+             function (retunVal) {
+                 $.ajax({
+                     type: "POST",
+                       url: "@Url.Action("Delete", "UserRole")",
+                     data: { ID: RoleID },
+                     success: function (data) {
+                         
+                         console.log(data);
+                         if (data.result) {
+                              showsuccess(data.message);
+                             setTimeout(function () { location.reload(); }, 500);
+                         }
+                         else {
+                              showsuccess(data.message);
+                             location.reload();
+                             setTimeout(function () { location.reload(); }, 500);
+                         }
+                     },
+                     error: function (arg) {
+                         alert("Error");
+                     }
+
+                 });
+             },
+              function (retunVal) {
+                  showalertpopup('No data was deleted.');
+              });
+
+     }
 </script>
 
 

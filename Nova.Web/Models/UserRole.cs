@@ -121,7 +121,76 @@ namespace Nova.Web.Models
 
             return false;
         }
-      
+        public async Task<UserRoleViewModel> GetRoleDetailByID(int RoleID)
+        {
+            UserRoleViewModel model = new UserRoleViewModel();
+            try
+            {
+                var Entity = await Task.Run(() => _Db.Roles.Find(RoleID));
+                if (Entity != null && Entity.Id > 0)
+                {
+                    model.Id = Entity.Id;
+                    model.Rolename = Entity.Rolename;
+                    model.IsDeleted = Entity.IsDeleted;
+                }
+            }
+            catch (Exception Ex)
+            {
+                // WriteLog("HealthGauge.Web.Models.RoleModel - GetRoleDetailByID", Ex.Message);
+            }
+            return model;
+        }
+        public async Task<bool> UpdateRole(UserRoleViewModel model)
+        {
+            bool Result = false;
+            try
+            {
+                if (!String.IsNullOrEmpty(model.Rolename))
+                {
+                    var Entity = await Task.Run(() => _Db.Roles.Find(model.Id));
+                    if (Entity != null && Entity.Id > 0)
+                    {
+                        Entity.Rolename = model.Rolename;
+                        //Entity.IsActive = model.IsActive;
+
+                        _Db.Roles.Update(Entity);
+                        _Db.SaveChanges();
+
+                        Result = true;
+                    }
+                }
+            }
+            catch (Exception Ex)
+            {
+               // WriteLog("HealthGauge.Web.Models.RoleModel - GetRoleDetailByID", Ex.Message);
+            }
+
+            return Result;
+        }
+
+        public async Task<bool> DeleteRolebyID(int ID)
+        {
+            bool Result = false;
+            try
+            {
+                var Entity = await Task.Run(() => _Db.Roles.Find(ID));
+                if (Entity != null && Entity.Id > 0)
+                {
+                    Entity.IsDeleted = true;
+                    _Db.Roles.Update(Entity);
+                    await _Db.SaveChangesAsync();
+
+                    Result = true;
+                }
+            }
+            catch (Exception Ex)
+            {
+                // WriteLog("HealthGauge.Web.Models.RoleModel - DeleteStorebyID", Ex.Message);
+            }
+
+            return Result;
+        }
+
 
     }
 }
