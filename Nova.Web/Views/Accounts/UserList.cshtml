@@ -1,0 +1,195 @@
+﻿@model List<Nova.Web.ViewModels.UserViewModel>
+@inject Nova.DB.NovaDBContext _db;
+@{
+    ViewData["Title"] = "UserList";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<script src="@Url.Content("~/lib/jquery/dist/jquery.min.js")"></script>
+
+
+<div class="toast-container position-fixed top-0 end-0 p-3">
+    <div id="liveToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header">
+            <strong class="me-auto">Alert</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div id="toastmessage" class="toast-body">
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+
+<div class="app-content-holder general-gaping ">
+
+    <!-- BEGIN row -->
+
+    <div class="row ">
+
+        <!-- BEGIN col-12 -->
+        <div class="col-xl-12">
+
+            <!-- BEGIN #responsiveTables -->
+            <div id="responsiveTables" class="mb-5 ">
+                @if (Model != null && Model.Count > 0)
+                {
+
+                    <div class="card card-general-table">
+                        <div class="card-body px-0 py-0">
+
+                            @*  <div class="row row-head ">
+                                @await Html.PartialAsync("_PageSize", psvm)
+                            </div> *@
+
+                            <div class="table-responsive">
+
+                                <table class="table table-firstRow mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col"></th>
+                                            <th scope="col">Firstname</th>
+                                            <th scope="col">Lastname</th>
+                                            <th scope="col">Email</th>
+                                            <th scope="col">Username</th>
+                                            <th scope="col">CreatedDate</th>
+                                            <th scope="col">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+
+                                        @foreach (Nova.Web.ViewModels.UserViewModel item in Model)
+                                        {
+                                            @*   pageCount = item.TotalRecords / item.PageSize;
+                                            if (item.TotalRecords % item.PageSize != 0)
+                                            {
+                                                pageCount = pageCount + 1;
+                                            }
+                                            pageNumber = item.PageNumber;
+                                            pageSize = item.PageSize;
+                                            pgdvm.pagecount = pageCount;
+                                            pgdvm.pagenumber = pageNumber; *@
+
+                                            <tr>
+                                                <th scope="row"></th>
+                                                <td>@item.Firstname</td>
+                                                <td>@item.Lastname</td>
+                                                <td>@item.Email</td>
+                                                <td>@item.Username</td>
+                                                <td>@item.CreatedDate</td>
+                                                <td class="dt-buttons">
+                                                    <a href="@Url.Action("Edit", "Accounts", new { ID = item.Id })" class="btn ">
+                                                        <i class="fas fa-pen-nib" data-toggle="tooltip" data-placement="bottom" title="Edit"></i>
+                                                    </a>
+
+
+                                                    <a href="javascript:void(0);" class="btn " id="Delete_@item.Id" onclick='DeleteUser(@item.Id);'>
+                                                        <i class="fas fa-trash"></i>
+                                                    </a>
+
+
+
+                                                </td>
+                                            </tr>
+                                        }
+
+                                    </tbody>
+                                </table>
+
+                            </div>
+
+
+
+                        </div>
+                    </div>
+
+                }
+            </div>
+
+        </div>
+        <!-- END #responsiveTables -->
+
+    </div>
+    <!-- END col-12-->
+
+</div>
+
+<script type="text/javascript">
+    var  LastUpdateRoleID = 0;
+     var LastUpdateRoleName="";
+     $(document).ready(function () {
+
+           var successMessage = '@TempData["SuccessMessage"]';
+         if (successMessage) {
+             showToast(successMessage);
+         }
+
+         // Check for error message
+         var errorMessage = '@TempData["ErrorMessage"]';
+         if (errorMessage) {
+             showToast(errorMessage);
+         }
+
+         function showToast(message) {
+             var toastEl = document.getElementById('liveToast');
+             var toastBody = toastEl.querySelector('.toast-body');
+             toastBody.textContent = message;
+             var toast = new bootstrap.Toast(toastEl);
+             toast.show();
+         }
+
+     });
+
+     function fnUpdateRole(id, rolename) {
+
+            LastUpdateRoleID =id;
+              LastUpdateRoleName=rolename;
+         $('#hdnRoleId').val(id);
+       //  $('#txtRoleName').val(rolename);
+          $('#InputRoleName').val(rolename);
+         $('#AddRoleModal').modal('show');
+          $('#AddorUpdateRole').html('Update Role');
+     }
+
+       function DeleteUser(UserId) {
+          //
+          var cofirmmessage = 'Are you sure you want to delete this?';
+          var successmessage = 'Data deleted successfully.';
+          var $element = $(this);
+          customConfirm({ message: cofirmmessage },
+              function (retunVal) {
+                  $.ajax({
+                      type: "POST",
+                        url: "@Url.Action("DeleteUser", "Accounts")",
+                      data: { UserId: UserId },
+                      success: function (data) {
+
+                          console.log(data);
+                          if (data.result) {
+                               showsuccess(data.message);
+                              setTimeout(function () { location.reload(); }, 500);
+                          }
+                          else {
+                               showsuccess(data.message);
+                              location.reload();
+                              setTimeout(function () { location.reload(); }, 500);
+                          }
+                      },
+                      error: function (arg) {
+                          alert("Error");
+                      }
+
+                  });
+              },
+               function (retunVal) {
+                   showalertpopup('No data was deleted.');
+               });
+
+      }
+</script>
+
+

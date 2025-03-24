@@ -1,12 +1,15 @@
 ﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Nova.DB;
 using Nova.Web.Interfaces;
 using Nova.Web.Utitlity;
 using Nova.Web.ViewModels;
+using SendGrid.Helpers.Mail;
 using System.Security.Claims;
+using System.Threading.Tasks;
 
 namespace Nova.Web.Controllers
 {
@@ -40,7 +43,7 @@ namespace Nova.Web.Controllers
                     ViewBag.ErrorMessage = Convert.ToString(TempData["ErrorMessage"]);
                 }
             }
-          
+
             if (Request.Cookies["NovaLogin"] != null)
             {
                 model.RememberMe = true;
@@ -80,18 +83,18 @@ namespace Nova.Web.Controllers
 
                     await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity), authProperties);
 
-                    
+
                     if (model.RememberMe)
                     {
                         await _Utility.SetCookies("NovaLogin", model.Username, 30);
-                       
+
                     }
                     else
                     {
                         await _Utility.RemoveCookies("NovaLogin");
                     }
 
-                    return Json(new { url = Url.Action("Index", "Home") });
+                    return Json(new { url = Url.Action("UserList", "Accounts") });
                 }
                 else
                 {
@@ -110,7 +113,7 @@ namespace Nova.Web.Controllers
 
         public IActionResult LogOut()
         {
-           _Service.LogOut();
+            _Service.LogOut();
 
             return RedirectToAction("LogIn", "Accounts");
         }
@@ -152,7 +155,7 @@ namespace Nova.Web.Controllers
                     }
 
                     bool Saveguidornot = await _Service.SaveGuid(guid.ToString(), lvm.Id);
-                    TempData["IsShowVerification"] = "true";                    
+                    TempData["IsShowVerification"] = "true";
                     return Json(new { url = Url.Action("Login", "Accounts") });
                 }
                 else
@@ -162,7 +165,7 @@ namespace Nova.Web.Controllers
             }
             return Json(new { url = Url.Action("Login", "Accounts") });
 
-            
+
         }
 
         [HttpGet]
@@ -194,7 +197,7 @@ namespace Nova.Web.Controllers
                     Dictionary<string, string> objDict = new Dictionary<string, string>();
                     objDict.Add("Pseudo", model.Firstname);
                     var SendmailResult = Task.Run(() => _Utility.SendEmailAsync("Notification: Password Updated Successfully", model.Email, "ChangePassword.html", model.Firstname, objDict));
-                    
+
                     if (SendmailResult.Result)
                     {
                         TempData["SuccessMessage"] = "Your Password has successfully changed";
@@ -217,7 +220,7 @@ namespace Nova.Web.Controllers
             {
                 return View(model);
             }
-            
+
 
         }
 
@@ -239,14 +242,14 @@ namespace Nova.Web.Controllers
 
 
                     // Update the following line in the ResetPassword method
-                    
+
                     Result = await _Service.UpdatePasswordForUser(model.UserId, NewPassword);
                     if (Result)
-                    {                        
+                    {
                         Dictionary<string, string> objDict = new Dictionary<string, string>();
                         objDict.Add("Pseudo", model.Firstname);
                         var SendmailResult = Task.Run(() => _Utility.SendEmailAsync("Notification: Password Updated Successfully", model.Email, "ChangePassword.html", model.Firstname, objDict));
-                     
+
                         if (SendmailResult.Result)
                         {
                             TempData["SuccessMessage"] = "Your Password has successfully changed";
@@ -286,6 +289,91 @@ namespace Nova.Web.Controllers
             }
         }
 
+        [Authorize(AuthenticationSchemes = CookieAuthenticationDefaults.AuthenticationScheme)]
+        [ResponseCache(Location = ResponseCacheLocation.None, NoStore = true)]
+        public async Task<ActionResult> UserList(int PageNumber, int PageSize, string SearchValue = "", string SortBy = "desc")
+        {
+            UserViewModel UVM = new UserViewModel();
+            UVM.IsActive = true;
+            //UVM.PageNumber = PageNumber;
+            //UVM.PageSize = PageSize;
+            //UVM.SearchValue = SearchValue;
+            //UVM.SortByValue = SortBy;
+            if (!String.IsNullOrEmpty(SearchValue))
+            {
+                ViewBag.SearchValue = SearchValue;
+            }
+            return View("UserList",await _Service.GetAllUsersList(UVM));
+        }
+
+        [HttpGet]
+        [Authorize(AuthenticationSchemes = CookieAuthenticationDefaults.AuthenticationScheme)]
+        [ResponseCache(Location = ResponseCacheLocation.None, NoStore = true)]
+        public async Task<ActionResult> Edit(int ID)
+        {
+                UserViewModel uvm = new UserViewModel();
+
+                uvm =await _Service.GetUserDetailByUserID(ID);
+
+                //uvm.UserRoleList = UM.GetRoleList();
+
+             //   ViewBag.LoggedInUserRoleID = UM.GetLoggedInUserInfo().UserRoleID;
+
+                return View(uvm);
+           
+        }
+        [HttpPost]
+        public async Task<IActionResult> Edit([FromForm] UserViewModel model)
+        {
+            int? uid = 0;
+
+            RemoveModelStateItem("password,NewPassword,ConfirmPassword,forgotpasswordguid");
+
+            if (ModelState.IsValid)
+            {
+                var userid = _Service.GetUserDataFromSession().Id;
+               // model = _Service.GetUsersDetails(ID); 
+                Int32 id = 0;
+                bool checkduplicateemai =await _Service.CheckDuplicateEmail(model.Email, model.Id);
+                bool checkduplicateusername = await _Service.CheckDuplicateUsername(model.Username, model.Id);
+                if (!checkduplicateemai && !checkduplicateusername)
+                {
+                    id =await _Service.UpdateUser(model);
+                    return RedirectToAction("UserList", "Accounts");
+                }
+                else
+                {
+                    if (checkduplicateemai)
+                    {
+                        ModelState.AddModelError("Email", "Email already exists.");
+                    }
+                    if (checkduplicateusername)
+                    {
+                        ModelState.AddModelError("Username", "Username already exists.");
+                    }
+                    return View("Edit", model);
+                }
+            }
+            else
+            {
+                return View(model);
+            }
+           
+        }
+
+        [HttpPost]
+        public async Task<JsonResult> DeleteUser(int UserId)
+        {
+            if (await _Service.DeleteUserByUserID(UserId))
+            {
+                return Json(new { Result = true, Message = "User deleted successfully." });
+            }
+            else
+            {
+                return Json(new { Result = false, Message = "User deleted unsuccessful." });
+            }
+
+        }
 
         private void RemoveModelStateItem(String data)
         {

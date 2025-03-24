@@ -12,6 +12,12 @@ namespace Nova.Web.Interfaces
         public Task<UserViewModel> GetUsersDetailsByID(int UserID);        
         public UserViewModel GetUserDataFromSession();
         Task<Boolean> CheckPassword(int? userid, string password);
+        Task<List<UserViewModel>> GetAllUsersList(UserViewModel UVM);
+        Task<UserViewModel> GetUserDetailByUserID(int UserID);
+        Task<bool> CheckDuplicateEmail(string EmailID, int userid);
+        Task<bool> CheckDuplicateUsername(string userName, int userid);
+        Task<Int32> UpdateUser(UserViewModel model);
+        Task<bool> DeleteUserByUserID(int UserID);
         public void LogOut();
     }
 }

@@ -160,7 +160,7 @@ namespace Nova.Web.Models
                                        Lastname = u.Lastname,
                                        Email = u.Email,
                                        Username = u.Username
-                                   }).FirstOrDefaultAsync()?? new UserViewModel();
+                                   }).FirstOrDefaultAsync() ?? new UserViewModel();
                 }
             }
             catch (Exception ex)
@@ -226,7 +226,164 @@ namespace Nova.Web.Models
             }
             return retresult;
         }
+        public async Task<List<UserViewModel>> GetAllUsersList(UserViewModel UVM)
+        {
+            List<UserViewModel> _List = new List<UserViewModel>();
 
+            try
+            {
+                _List = await Task.Run(() =>
+                {
+                    return (from u in _Db.Users
+                            where u.IsActive && !u.IsDeleted
+                            orderby u.Id descending
+                            select new UserViewModel
+                            {
+                                Id = u.Id,
+                                Firstname = u.Firstname,
+                                Lastname = u.Lastname,
+                                Email = u.Email,
+                                Username = u.Username,
+                                CreatedDate = u.CreatedDate,
+                            }).ToList();
+                });
+            }
+            catch (Exception Ex)
+            {
+                // Handle exception
+            }
+
+            return _List;
+        }
+
+        public async Task<UserViewModel> GetUserDetailByUserID(int UserID)
+        {
+            UserViewModel model = new UserViewModel();
+            try
+            {
+                if (UserID > 0)
+                {
+                    model = await (from u in _Db.Users
+                                   where u.IsActive && !u.IsDeleted && u.Id == UserID
+                                   select new UserViewModel
+                                   {
+                                       Id = u.Id,
+                                       Firstname = u.Firstname,
+                                       Lastname = u.Lastname,
+                                       Email = u.Email,
+                                       Username = u.Username
+                                   }).FirstOrDefaultAsync() ?? new UserViewModel();
+                }
+            }
+            catch (Exception ex)
+            {
+                // Handle exception
+            }
+            return model;
+        }
+        public async Task<bool> CheckDuplicateEmail(string EmailID, int userid)
+        {
+            bool result = false;
+
+            try
+            {
+                var UVM = await Task.Run(() =>
+                {
+                    return (from u in _Db.Users
+                            where u.Email.ToLower() == EmailID.Trim().ToLower() && !u.IsDeleted && u.Id != userid
+                            select new UserViewModel
+                            {
+                                Username = u.Username
+                            }).FirstOrDefault();
+                });
+
+                if (UVM != null)
+                {
+                    result = true;
+                }
+            }
+            catch (Exception Ex)
+            {
+                // Handle exception
+            }
+            return result;
+        }
+
+        public async Task<bool> CheckDuplicateUsername(string userName, int userid)
+        {
+            bool result = false;
+            try
+            {
+                var UVM = await Task.Run(() =>
+                {
+                    return (from u in _Db.Users
+                            where u.Username.ToLower() == userName.Trim().ToLower() && !u.IsDeleted && u.Id != userid
+                            select new UserViewModel
+                            {
+                                Username = u.Username
+                            }).FirstOrDefault();
+                });
+
+                if (UVM != null)
+                {
+                    result = true;
+                }
+            }
+            catch (Exception Ex)
+            {
+                // Handle exception
+            }
+            return result;
+        }
+        public async Task<Int32> UpdateUser(UserViewModel model)
+        {
+            Int32 userid = 0;
+
+            try
+            {
+                if (!String.IsNullOrEmpty(model.ToString()))
+                {
+                    var entity = await _Db.Users.Where(x => x.Id == model.Id && !x.IsDeleted).FirstOrDefaultAsync();
+
+                    if (entity != null && !string.IsNullOrEmpty(entity.Firstname))
+                    {
+                        entity.Username = model.Username;
+                        entity.Firstname = model.Firstname;
+                        entity.Lastname = model.Lastname;
+                        entity.Email = model.Email;
+                        _Db.Users.Update(entity);
+                        await _Db.SaveChangesAsync();
+                        userid = entity.Id;
+                    }
+                }
+            }
+            catch (Exception Ex)
+            {
+                // Handle exception
+            }
+            return userid;
+        }
+
+        public async Task<bool> DeleteUserByUserID(int UserID)
+        {
+            bool Result = false;
+            try
+            {
+                var Entity = await _Db.Users.FindAsync(UserID);
+                if (Entity != null && Entity.Id > 0)
+                {
+                    Entity.IsDeleted = true;
+                    _Db.Users.Update(Entity);
+                    await _Db.SaveChangesAsync();
+                    Result = true;
+                }
+            }
+            catch (Exception Ex)
+            {
+                // WriteLog("HealthGauge.Web.Models.UserModel - DeleteUserByUserID", Ex.Message);
+            }
+            return Result;
+        }
         public void LogOut()
         {
             try
