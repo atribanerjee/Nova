@@ -370,7 +370,7 @@
 
       function DeleteRole(RoleID) {
          //
-         var cofirmmessage = 'Are you sure you want to delete this?';
+          var cofirmmessage = 'Are you sure you want to delete this? Note: All the users, using this role will not be able to access the system anymore, until you assign them a new role.';
          var successmessage = 'Data deleted successfully.';
          var $element = $(this);
          customConfirm({ message: cofirmmessage },
