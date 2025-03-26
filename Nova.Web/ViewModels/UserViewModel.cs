@@ -15,6 +15,9 @@ namespace Nova.Web.ViewModels
         [Required(ErrorMessage = "Last Name is required")]
         public string Lastname { get; set; }
 
+        public string? Fullname { get; set; }
+
+
         [DisplayName("User Name")]
         [Required(ErrorMessage = "User Name is required")]
         [StringLength(50, MinimumLength = 3)]
@@ -45,6 +48,7 @@ namespace Nova.Web.ViewModels
         public string ConfirmPassword { get; set; }
 
         public int RoleId { get; set; }
+        public string? Rolename { get; set; }
 
         public DateTime CreatedDate { get; set; }
         public int CreatedBy { get; set; }
@@ -56,6 +60,6 @@ namespace Nova.Web.ViewModels
         public DateTime? ResetPasswordTokenExpiry { get; set; }
         public int UserId { get; set; }
 
-        public bool RememberMe { get; set; }
+        public bool RememberMe { get; set; } = false;
     }
 }

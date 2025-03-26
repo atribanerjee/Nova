@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 
 namespace Nova.Web.Controllers
 {
+    [ResponseCache(Location = ResponseCacheLocation.None, NoStore = true)]
     public class AccountsController : Controller
     {
         NovaDBContext _db;
@@ -43,8 +44,8 @@ namespace Nova.Web.Controllers
                     ViewBag.ErrorMessage = Convert.ToString(TempData["ErrorMessage"]);
                 }
             }
-
-            if (Request.Cookies["NovaLogin"] != null)
+            
+            if (_Utility.GetCookies("NovaLogin") != null)
             {
                 model.RememberMe = true;
                 model.Username = await _Utility.GetCookies("NovaLogin");
@@ -54,10 +55,11 @@ namespace Nova.Web.Controllers
                 model.Email = String.Empty;
                 model.RememberMe = false;
             }
-            return View();
+            return View(model);
         }
-        [ValidateAntiForgeryToken]
+
         [HttpPost]
+        [ValidateAntiForgeryToken]        
         public async Task<IActionResult> Login([FromForm] UserViewModel model)
         {
             UserViewModel UVM = new UserViewModel();
@@ -68,22 +70,7 @@ namespace Nova.Web.Controllers
                 UVM = await _Service.CheckLogin(model);
                 if (UVM != null && UVM.Id > 0)
                 {
-                    var claims = new List<Claim>
-                    {
-                        new Claim(ClaimTypes.Name, UVM.Username),
-                        new Claim(ClaimTypes.NameIdentifier, UVM.Id.ToString())
-                    };
-
-                    var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-                    var authProperties = new AuthenticationProperties
-                    {
-                        IsPersistent = model.RememberMe,
-                        ExpiresUtc = model.RememberMe ? DateTimeOffset.UtcNow.AddDays(30) : DateTimeOffset.UtcNow.AddMinutes(30)
-                    };
-
-                    await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity), authProperties);
-
-
+                   
                     if (model.RememberMe)
                     {
                         await _Utility.SetCookies("NovaLogin", model.Username, 30);
@@ -124,6 +111,7 @@ namespace Nova.Web.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ForgetPassword([FromForm] UserViewModel model)
         {
             UserViewModel lvm = new UserViewModel();
@@ -186,6 +174,7 @@ namespace Nova.Web.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ResetPasswords(UserViewModel model)
         {
             RemoveModelStateItem("Firstname,Lastname,Email,Username,NewPassword,Password");
@@ -229,7 +218,9 @@ namespace Nova.Web.Controllers
         {
             return View();
         }
+        
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<JsonResult> ResetPassword(string password, string NewPassword, string ConfirmPassword)
         {
             bool Result = false;
@@ -274,6 +265,7 @@ namespace Nova.Web.Controllers
             }
             return Json(new { Result = true, Message = "Missing data." });
         }
+        
         [HttpGet]
         public async Task<JsonResult> Checkpassword(String Password)
         {
@@ -289,9 +281,9 @@ namespace Nova.Web.Controllers
             }
         }
 
-        [Authorize(AuthenticationSchemes = CookieAuthenticationDefaults.AuthenticationScheme)]
-        [ResponseCache(Location = ResponseCacheLocation.None, NoStore = true)]
-        public async Task<ActionResult> UserList(int PageNumber, int PageSize, string SearchValue = "", string SortBy = "desc")
+        [HttpGet]
+        [SessionAuthorize("")]        
+        public async Task<IActionResult> UserList(int PageNumber, int PageSize, string SearchValue = "", string SortBy = "desc")
         {
             UserViewModel UVM = new UserViewModel();
             UVM.IsActive = true;
@@ -307,9 +299,8 @@ namespace Nova.Web.Controllers
         }
 
         [HttpGet]
-        [Authorize(AuthenticationSchemes = CookieAuthenticationDefaults.AuthenticationScheme)]
-        [ResponseCache(Location = ResponseCacheLocation.None, NoStore = true)]
-        public async Task<ActionResult> Edit(int ID)
+        [SessionAuthorize("")]        
+        public async Task<IActionResult> Edit(int ID)
         {
                 UserViewModel uvm = new UserViewModel();
 
@@ -322,7 +313,10 @@ namespace Nova.Web.Controllers
                 return View(uvm);
            
         }
+        
         [HttpPost]
+        [ValidateAntiForgeryToken]
+        [SessionAuthorize("")]        
         public async Task<IActionResult> Edit([FromForm] UserViewModel model)
         {
             int? uid = 0;
@@ -362,6 +356,8 @@ namespace Nova.Web.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
+        [SessionAuthorize("")]        
         public async Task<JsonResult> DeleteUser(int UserId)
         {
             if (await _Service.DeleteUserByUserID(UserId))

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using Nova.DB;
 using Nova.Web.Interfaces;
@@ -9,6 +10,8 @@ using System.Threading.Tasks;
 
 namespace Nova.Web.Controllers
 {
+    [SessionAuthorize("")]
+    [ResponseCache(Location = ResponseCacheLocation.None, NoStore = true)]
     public class UserRoleController : Controller
     {
         NovaDBContext _db;
@@ -77,6 +80,7 @@ namespace Nova.Web.Controllers
 
         }
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> GetRoleLIst(string ID)
         {
 
@@ -131,6 +135,7 @@ namespace Nova.Web.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Add(String RoleName)
         {
             UserRoleViewModel model = new UserRoleViewModel();
@@ -170,13 +175,15 @@ namespace Nova.Web.Controllers
             }
         }
         [HttpGet]
-        public async Task<ActionResult> Edit(int ID)
+        public async Task<IActionResult> Edit(int ID)
         {
             UserRoleViewModel model = new UserRoleViewModel();
             model = await _UserRole.GetRoleDetailByID(ID);
             return View(model);
         }
+
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(Int32 RoleID, String RoleName)
         {
             UserRoleViewModel model = new UserRoleViewModel();
@@ -220,6 +227,8 @@ namespace Nova.Web.Controllers
 
             return Json(new { Result = false, Message = "Value not exist" });
         }
+
+        [HttpGet]
         public async Task<IActionResult> CheckDulicate(String RoleName)
         {
             UserRoleViewModel model = new UserRoleViewModel();
@@ -238,17 +247,16 @@ namespace Nova.Web.Controllers
 
         #region:: 4.  Delete
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int ID)
         {
             if (await _UserRole.DeleteRolebyID(ID))
             {
                 return Ok(new { Result = true, Message = "Role deleted successfully." });
-               // return Json(new { Result = true, Message = "Role deleted successfully." });
             }
             else
             {
                 return Ok(new { Result = true, Message = "Role delete failed." });
-               // return Json(new { Result = false, Message = "Role delete failed." }, new Newtonsoft.Json.JsonSerializerSettings());
             }
 
         }

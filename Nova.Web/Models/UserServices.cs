@@ -30,7 +30,8 @@ namespace Nova.Web.Models
                              Lastname = u.Lastname ?? string.Empty,
                              Email = u.Email ?? string.Empty,
                              RoleId = u.RoleId,
-                             Password = model.Password
+                             Password = model.Password,
+                             Rolename = u.Role.Rolename
                          }).FirstOrDefaultAsync() ?? new UserViewModel();
 
             if (UVM != null && UVM.Id > 0)
@@ -175,10 +176,13 @@ namespace Nova.Web.Models
             try
             {
                 _Utility.SetSessionValue("LoggedInUserID", model.Id);
-                _Utility.SetSessionValue("LoggedInUserName", model.Username);
-                _Utility.SetSessionValue("LoggedInFirstName", model.Firstname);
-                _Utility.SetSessionValue("LoggedInLastName", model.Lastname);
-                _Utility.SetSessionValue("LoggedInEmail", model.Email);
+                _Utility.SetSessionValue("LoggedInUserName", model.Username.Trim());
+                _Utility.SetSessionValue("LoggedInFirstName", model.Firstname.Trim());
+                _Utility.SetSessionValue("LoggedInLastName", model.Lastname.Trim());
+                _Utility.SetSessionValue("LoggedInFullName", string.Concat(model.Firstname.Trim()," ",model.Lastname));
+                _Utility.SetSessionValue("LoggedInEmail", model.Email.ToLower().Trim());
+                _Utility.SetSessionValue("LoggedInRoleID", model.RoleId);
+                _Utility.SetSessionValue("LoggedInRolename", model.Rolename.ToLower().Trim());
             }
             catch (Exception ex)
             {
@@ -195,7 +199,10 @@ namespace Nova.Web.Models
                 model.Username = _Utility.GetSessionValue("LoggedInUserName").ToString() ?? "";
                 model.Firstname = _Utility.GetSessionValue("LoggedInFirstName").ToString() ?? "";
                 model.Lastname = _Utility.GetSessionValue("LoggedInLastName").ToString() ?? "";
+                model.Fullname = _Utility.GetSessionValue("LoggedInFullName").ToString() ?? "";
                 model.Email = _Utility.GetSessionValue("LoggedInEmail").ToString() ?? "";
+                model.RoleId = Convert.ToInt32(_Utility.GetSessionValue("LoggedInRoleID"));
+                model.Rolename = _Utility.GetSessionValue("LoggedInRolename").ToString() ?? "";
             }
             catch (Exception ex)
             {
@@ -242,6 +249,7 @@ namespace Nova.Web.Models
                                 Id = u.Id,
                                 Firstname = u.Firstname,
                                 Lastname = u.Lastname,
+                                Fullname = string.Concat(u.Firstname," ",u.Lastname),
                                 Email = u.Email,
                                 Username = u.Username,
                                 CreatedDate = u.CreatedDate,
