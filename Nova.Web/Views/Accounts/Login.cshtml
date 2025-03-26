@@ -77,7 +77,28 @@
             </div>
         </div>
     </form>
-
+    <form asp-action="TwoFactorAuthentication" asp-controller="Accounts" method="POST" data-ajax="true" data-ajax-update="result" asp-antiforgery="true" data-ajax-success="success">
+        <div class="modal fade" id="2FAModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-sm">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="exampleModalLabel">2FA Authentication</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Enter your One-Time Password (OTP)</p>
+                        @Html.HiddenFor(m => m.Id)
+                        @Html.TextBoxFor(m => m.TwoFactorCode, new { @class = "form-control", @placeholder = "One-Time Password (OTP)", @autofocus = "", @autocomplete = "off" })
+                        <span class="text-danger"> </span>
+                    </div>
+                    <div class="modal-footer">
+                        <button data-bs-dismiss="modal" class="btn btn-danger" type="button">Cancel</button>
+                        <button id="btnReset" class="btn btn-primary" type="submit">Submit</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
 
     <!-- login page start-->
     <div class="container-fluid">
@@ -111,8 +132,8 @@
                                         @Html.CheckBoxFor(m => m.RememberMe)
                                         <label class="" for="RememberMe">Remember me</label>
                                     </div><a class="link" href="javscript:void(0);" id="ShowModal" data-bs-toggle="modal" data-bs-target="#forgotPasswordModal">Forgot password?</a>
-                                    <button class="btn btn-primary btn-block w-100" type="submit">Sign in</button>                                    
-                                </div>                                
+                                    <button class="btn btn-primary btn-block w-100" type="submit">Sign in</button>
+                                </div>
                             </form>
 
                         </div>
@@ -140,18 +161,27 @@
 <!-- Plugin used-->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-ajax-unobtrusive/3.2.6/jquery.unobtrusive-ajax.js" integrity="sha256-v2nySZafnswY87um3ymbg7p9f766IQspC5oqaqZVX2c=" crossorigin="anonymous"></script>
 <script>
-    success = function (result) {              
-        window.location.href = result.url;
+    success = function (result) {
+        if(result.result)
+        {
+            showToast(result.message);
+            $('#2FAModal #Id').val(result.id);
+            $('#2FAModal').modal('show');
+        }
+        else{
+            window.location.href = result.url;
+        }
     };
 
 </script>
 <script>
     $(document).ready(function () {
-        
+
         // Check for success message
         var successMessage = '@TempData["SuccessMessage"]';
         if (successMessage) {
             showToast(successMessage);
+
         }
 
         // Check for error message
@@ -160,13 +190,7 @@
             showToast(errorMessage);
         }
 
-        function showToast(message) {
-            var toastEl = document.getElementById('liveToast');
-            var toastBody = toastEl.querySelector('.toast-body');
-            toastBody.textContent = message;
-            var toast = new bootstrap.Toast(toastEl);
-            toast.show();
-        }
+
 
         $("#ShowModal").click(function () {
             $('#forgotPasswordModal').modal('show');
@@ -187,4 +211,12 @@
             }).always(function () {});
         });
     });
+     
+    function showToast(message) {
+            var toastEl = document.getElementById('liveToast');
+            var toastBody = toastEl.querySelector('.toast-body');
+            toastBody.textContent = message;
+            var toast = new bootstrap.Toast(toastEl);
+            toast.show();
+    }
 </script>

@@ -11,5 +11,6 @@ namespace Nova.DB
 
         public DbSet<Users> Users { get; set; }
         public DbSet<Roles> Roles { get; set; }
+        public DbSet<UserActivities> UserActivities { get; set; }
     }
 }

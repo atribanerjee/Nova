@@ -38,7 +38,7 @@ namespace Nova.Web.Controllers
             {
                 string? uid = string.Empty;
                 UserRoleViewModel model = new UserRoleViewModel();
-                if (_Service.GetUserDataFromSession().Id.ToString() != null)
+                if (_Service.GetUserDataFromSession().Id>0)
                 {
                     if (TempData["SuccessMessage"] != null)
                     {
@@ -56,14 +56,6 @@ namespace Nova.Web.Controllers
                     }
 
                     uid = _Service.GetUserDataFromSession().Id.ToString();
-
-                    model.PageNumber = 0;
-                    model.PageSize = 10;
-                    return View(await _UserRole.GetAllRoleList(model, ""));
-                }
-                else
-                {
-                    uid = "1";
 
                     model.PageNumber = 0;
                     model.PageSize = 10;

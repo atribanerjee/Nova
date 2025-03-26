@@ -1,5 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 using Nova.DB;
+using Nova.DB.POCO;
 using Nova.Web.Interfaces;
 using Nova.Web.Utitlity;
 using Nova.Web.ViewModels;
@@ -21,7 +23,7 @@ namespace Nova.Web.Models
 
             string password = await _Utility.Encrypt(model.Password);
             UVM = await (from u in _Db.Users
-                         where u.Username == model.Username && u.Password == password
+                         where u.IsActive && !u.IsDeleted && u.Username == model.Username && u.Password == password
                          select new UserViewModel
                          {
                              Id = u.Id,
@@ -36,7 +38,6 @@ namespace Nova.Web.Models
 
             if (UVM != null && UVM.Id > 0)
             {
-                SetUserDataToSession(UVM);
                 return UVM;
             }
 
@@ -48,18 +49,15 @@ namespace Nova.Web.Models
             UserViewModel UVM = new UserViewModel();
             try
             {
-                UVM = await Task.Run(() =>
-                {
-                    return (from u in _Db.Users
-                            where u.Email.Trim().ToLower() == EmailID.Trim().ToLower() && u.IsActive && !u.IsDeleted
-                            select new UserViewModel
-                            {
-                                Username = u.Username,
-                                Firstname = u.Firstname,
-                                Lastname = u.Lastname,
-                                Id = u.Id
-                            }).FirstOrDefault() ?? new UserViewModel();
-                });
+                UVM = await (from u in _Db.Users
+                             where u.Email.Trim().ToLower() == EmailID.Trim().ToLower() && u.IsActive && !u.IsDeleted
+                             select new UserViewModel
+                             {
+                                 Username = u.Username,
+                                 Firstname = u.Firstname,
+                                 Lastname = u.Lastname,
+                                 Id = u.Id
+                             }).FirstOrDefaultAsync() ?? new UserViewModel();
 
                 if (UVM == null)
                 {
@@ -97,26 +95,24 @@ namespace Nova.Web.Models
             {
                 if (!string.IsNullOrEmpty(guid))
                 {
-                    model = await Task.Run(() =>
-                    {
-                        return (from u in _Db.Users
-                                where !u.IsDeleted && u.ResetPasswordToken == guid
-                                select new UserViewModel
-                                {
-                                    Id = u.Id,
-                                    UserId = u.Id,
-                                    Firstname = u.Firstname ?? string.Empty,
-                                    Lastname = u.Lastname ?? string.Empty,
-                                    Email = u.Email ?? string.Empty,
-                                    Username = u.Username ?? string.Empty,
-                                    CreatedDate = u.CreatedDate,
-                                }).FirstOrDefault() ?? new UserViewModel();
-                    }) ?? new UserViewModel();
+                    model = await (from u in _Db.Users
+                                   where !u.IsDeleted && u.ResetPasswordToken == guid
+                                   select new UserViewModel
+                                   {
+                                       Id = u.Id,
+                                       UserId = u.Id,
+                                       Firstname = u.Firstname ?? string.Empty,
+                                       Lastname = u.Lastname ?? string.Empty,
+                                       Email = u.Email ?? string.Empty,
+                                       Username = u.Username ?? string.Empty,
+                                       CreatedDate = u.CreatedDate,
+                                   }).FirstOrDefaultAsync() ?? new UserViewModel();
+
                 }
             }
             catch (Exception)
             {
-                //WriteLog("HealthGauge.Web.Models.UserModel - GetAllUsersList", Ex.Message);
+
             }
             return model;
         }
@@ -144,33 +140,6 @@ namespace Nova.Web.Models
             return retresult;
         }
 
-        public async Task<UserViewModel> GetUsersDetailsByID(int UserID)
-        {
-            UserViewModel model = new UserViewModel();
-
-            try
-            {
-                if (UserID > 0)
-                {
-                    model = await (from u in _Db.Users
-                                   where u.IsActive && !u.IsDeleted && u.Id == UserID
-                                   select new UserViewModel
-                                   {
-                                       Id = u.Id,
-                                       Firstname = u.Firstname,
-                                       Lastname = u.Lastname,
-                                       Email = u.Email,
-                                       Username = u.Username
-                                   }).FirstOrDefaultAsync() ?? new UserViewModel();
-                }
-            }
-            catch (Exception ex)
-            {
-
-            }
-            return model;
-        }
-
         private void SetUserDataToSession(UserViewModel model)
         {
             try
@@ -179,7 +148,7 @@ namespace Nova.Web.Models
                 _Utility.SetSessionValue("LoggedInUserName", model.Username.Trim());
                 _Utility.SetSessionValue("LoggedInFirstName", model.Firstname.Trim());
                 _Utility.SetSessionValue("LoggedInLastName", model.Lastname.Trim());
-                _Utility.SetSessionValue("LoggedInFullName", string.Concat(model.Firstname.Trim()," ",model.Lastname));
+                _Utility.SetSessionValue("LoggedInFullName", string.Concat(model.Firstname.Trim(), " ", model.Lastname));
                 _Utility.SetSessionValue("LoggedInEmail", model.Email.ToLower().Trim());
                 _Utility.SetSessionValue("LoggedInRoleID", model.RoleId);
                 _Utility.SetSessionValue("LoggedInRolename", model.Rolename.ToLower().Trim());
@@ -239,22 +208,28 @@ namespace Nova.Web.Models
 
             try
             {
-                _List = await Task.Run(() =>
-                {
-                    return (from u in _Db.Users
-                            where u.IsActive && !u.IsDeleted
-                            orderby u.Id descending
-                            select new UserViewModel
-                            {
-                                Id = u.Id,
-                                Firstname = u.Firstname,
-                                Lastname = u.Lastname,
-                                Fullname = string.Concat(u.Firstname," ",u.Lastname),
-                                Email = u.Email,
-                                Username = u.Username,
-                                CreatedDate = u.CreatedDate,
-                            }).ToList();
-                });
+                _List = await (from u in _Db.Users
+                               where !u.IsDeleted
+                               orderby u.Id descending
+                               select new UserViewModel
+                               {
+                                   Id = u.Id,
+                                   Firstname = u.Firstname,
+                                   Lastname = u.Lastname,
+                                   Fullname = string.Concat(u.Firstname, " ", u.Lastname),
+                                   Email = u.Email,
+                                   Username = u.Username,
+                                   CreatedDate = u.CreatedDate,
+                                   IsActive = u.IsActive,
+                                   IsDeleted = u.IsDeleted,
+                                   RoleId = u.RoleId,
+                                   Rolename = u.Role.Rolename,
+                                   ResetPasswordToken = u.ResetPasswordToken,
+                                   ResetPasswordTokenExpiry = u.ResetPasswordTokenExpiry,
+                                   TwoFactorCode = u.TwoFactorCode,
+                                   TwoFactorCodeExpiry = u.TwoFactorCodeExpiry
+                               }).ToListAsync();
+
             }
             catch (Exception Ex)
             {
@@ -272,15 +247,33 @@ namespace Nova.Web.Models
                 if (UserID > 0)
                 {
                     model = await (from u in _Db.Users
-                                   where u.IsActive && !u.IsDeleted && u.Id == UserID
+                                   where u.Id == UserID && !u.IsDeleted
                                    select new UserViewModel
                                    {
                                        Id = u.Id,
                                        Firstname = u.Firstname,
                                        Lastname = u.Lastname,
+                                       Fullname = string.Concat(u.Firstname, " ", u.Lastname),
                                        Email = u.Email,
-                                       Username = u.Username
+                                       Username = u.Username,
+                                       CreatedDate = u.CreatedDate,
+                                       IsActive = u.IsActive,
+                                       IsDeleted = u.IsDeleted,
+                                       RoleId = u.RoleId,
+                                       Rolename = u.Role.Rolename,
+                                       ResetPasswordToken = u.ResetPasswordToken,
+                                       ResetPasswordTokenExpiry = u.ResetPasswordTokenExpiry,
+                                       TwoFactorCode = u.TwoFactorCode,
+                                       TwoFactorCodeExpiry = u.TwoFactorCodeExpiry
                                    }).FirstOrDefaultAsync() ?? new UserViewModel();
+
+                    model.ddlRoles = await (from r in _Db.Roles
+                                            where !r.IsDeleted
+                                            select new SelectListItem
+                                            {
+                                                Text = r.Rolename,
+                                                Value = r.Id.ToString()
+                                            }).ToListAsync();
                 }
             }
             catch (Exception ex)
@@ -295,15 +288,12 @@ namespace Nova.Web.Models
 
             try
             {
-                var UVM = await Task.Run(() =>
-                {
-                    return (from u in _Db.Users
-                            where u.Email.ToLower() == EmailID.Trim().ToLower() && !u.IsDeleted && u.Id != userid
-                            select new UserViewModel
-                            {
-                                Username = u.Username
-                            }).FirstOrDefault();
-                });
+                var UVM = await (from u in _Db.Users
+                                 where u.Email.ToLower().Trim() == EmailID.Trim().ToLower() && !u.IsDeleted && u.Id != userid
+                                 select new UserViewModel
+                                 {
+                                     Username = u.Username
+                                 }).FirstOrDefaultAsync();
 
                 if (UVM != null)
                 {
@@ -322,15 +312,13 @@ namespace Nova.Web.Models
             bool result = false;
             try
             {
-                var UVM = await Task.Run(() =>
-                {
-                    return (from u in _Db.Users
-                            where u.Username.ToLower() == userName.Trim().ToLower() && !u.IsDeleted && u.Id != userid
-                            select new UserViewModel
-                            {
-                                Username = u.Username
-                            }).FirstOrDefault();
-                });
+                var UVM = await (from u in _Db.Users
+                                 where u.Username.ToLower() == userName.Trim().ToLower() && !u.IsDeleted && u.Id != userid
+                                 select new UserViewModel
+                                 {
+                                     Username = u.Username
+                                 }).FirstOrDefaultAsync();
+
 
                 if (UVM != null)
                 {
@@ -352,17 +340,41 @@ namespace Nova.Web.Models
                 if (!String.IsNullOrEmpty(model.ToString()))
                 {
                     var entity = await _Db.Users.Where(x => x.Id == model.Id && !x.IsDeleted).FirstOrDefaultAsync();
-
-                    if (entity != null && !string.IsNullOrEmpty(entity.Firstname))
+                    if (entity != null)
                     {
-                        entity.Username = model.Username;
-                        entity.Firstname = model.Firstname;
-                        entity.Lastname = model.Lastname;
-                        entity.Email = model.Email;
+                        if (!string.IsNullOrEmpty(model.Firstname) && !string.IsNullOrWhiteSpace(model.Firstname) && entity.Firstname.Trim().ToLower() != model.Firstname.Trim().ToLower())
+                        {
+                            entity.Firstname = model.Firstname;
+                            entity.ModifiedDate = DateTime.Now;
+                            entity.ModifiedBy = GetUserDataFromSession().Id;
+                        }
+                        if (!string.IsNullOrEmpty(model.Lastname) && !string.IsNullOrWhiteSpace(model.Lastname) && entity.Lastname.Trim().ToLower() != model.Lastname.Trim().ToLower())
+                        {
+                            entity.Lastname = model.Lastname;
+                            entity.ModifiedDate = DateTime.Now;
+                            entity.ModifiedBy = GetUserDataFromSession().Id;
+                        }
+                        if (entity.RoleId != model.RoleId)
+                        {
+                            entity.RoleId = model.RoleId;
+                            entity.ModifiedDate = DateTime.Now;
+                            entity.ModifiedBy = GetUserDataFromSession().Id;
+                        }
+                        if (!string.IsNullOrEmpty(model.TwoFactorCode) && !string.IsNullOrWhiteSpace(model.TwoFactorCode) && entity.TwoFactorCode.Trim().ToLower() != model.TwoFactorCode.Trim().ToLower())
+                        {
+                            entity.TwoFactorCode = model.TwoFactorCode;
+                            entity.TwoFactorCodeExpiry = model.TwoFactorCodeExpiry;
+                            entity.ModifiedDate = DateTime.Now;
+                            entity.ModifiedBy = GetUserDataFromSession().Id;
+                        }
+
+
+
                         _Db.Users.Update(entity);
                         await _Db.SaveChangesAsync();
                         userid = entity.Id;
                     }
+
                 }
             }
             catch (Exception Ex)
@@ -402,6 +414,79 @@ namespace Nova.Web.Models
             {
 
             }
+        }
+
+        public async Task<bool> Generate2FACode(int id)
+        {
+            bool Result = false;
+            try
+            {
+                var UserDetails = await GetUserDetailByUserID(id);
+                if (UserDetails != null)
+                {
+                    UserDetails.TwoFactorCode = new Random().Next(100000, 999999).ToString();
+                    UserDetails.TwoFactorCodeExpiry = DateTime.Now.AddMinutes(5);
+
+                    await UpdateUser(UserDetails);
+
+                    Dictionary<string, string> objDict = new Dictionary<string, string>();
+                    objDict.Add("Pseudo", UserDetails.Firstname);
+                    objDict.Add("2FACode", UserDetails.TwoFactorCode);
+
+                    await _Utility.SendEmailAsync("Nova Asset Management - 2FA Code", UserDetails.Email, "2FA.html", objDict);
+
+                    Result = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                // Handle exception
+            }
+            return Result;
+        }
+
+        public async Task<bool> Check2FACode(int id, string twoFactorCode)
+        {
+            bool Result = false;
+            try
+            {
+                var UserDetails = await GetUserDetailByUserID(id);
+                if (UserDetails != null && !string.IsNullOrEmpty(twoFactorCode) && !string.IsNullOrWhiteSpace(twoFactorCode))
+                {
+                    if (UserDetails.TwoFactorCode == twoFactorCode && UserDetails.TwoFactorCodeExpiry >= DateTime.Now)
+                    {
+                        SetUserDataToSession(UserDetails);
+                        Result = true;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+
+            }
+            return Result;
+        }
+
+        public async Task<bool> StatusUpdateForUserByUserID(int userId, bool status)
+        {
+            bool Result = false;
+            try
+            {
+                var Entity = await _Db.Users.FindAsync(userId);
+                if (Entity != null && Entity.Id > 0)
+                {
+                    Entity.IsActive = status;
+                    _Db.Users.Update(Entity);
+
+                    await _Db.SaveChangesAsync();
+                    Result = true;
+                }
+            }
+            catch (Exception ex)
+            {
+
+            }
+            return Result;
         }
     }
 }

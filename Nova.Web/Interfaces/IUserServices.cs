@@ -8,8 +8,7 @@ namespace Nova.Web.Interfaces
         public Task<UserViewModel> CheckEmailExists(string EmailID);
         public Task<bool> SaveGuid(string guid, int UserID);
         public Task<UserViewModel> GetUserDetailByGUID(string guid);
-        public Task<bool> UpdatePasswordForUser(int UserID, string Password);
-        public Task<UserViewModel> GetUsersDetailsByID(int UserID);        
+        public Task<bool> UpdatePasswordForUser(int UserID, string Password);              
         public UserViewModel GetUserDataFromSession();
         Task<Boolean> CheckPassword(int? userid, string password);
         Task<List<UserViewModel>> GetAllUsersList(UserViewModel UVM);
@@ -19,5 +18,8 @@ namespace Nova.Web.Interfaces
         Task<Int32> UpdateUser(UserViewModel model);
         Task<bool> DeleteUserByUserID(int UserID);
         public void LogOut();
+        public Task<bool> Generate2FACode(int id);
+        public Task<bool> Check2FACode(int id, string twoFactorCode);
+        public Task<bool> StatusUpdateForUserByUserID(int userId, bool status);
     }
 }

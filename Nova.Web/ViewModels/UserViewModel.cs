@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using Microsoft.AspNetCore.Mvc.Rendering;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
 namespace Nova.Web.ViewModels
@@ -61,5 +62,10 @@ namespace Nova.Web.ViewModels
         public int UserId { get; set; }
 
         public bool RememberMe { get; set; } = false;
+
+        public string? TwoFactorCode { get; set; }
+        public DateTime? TwoFactorCodeExpiry { get; set; }
+
+        public List<SelectListItem>? ddlRoles { get; set; }
     }
 }

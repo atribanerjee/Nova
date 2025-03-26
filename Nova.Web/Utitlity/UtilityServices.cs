@@ -91,7 +91,7 @@
         }
 
 
-        public async Task<bool> SendEmailAsync(string subject, string email, string htmlMessage, String name, Dictionary<string, string> objDict)
+        public async Task<bool> SendEmailAsync(string subject, string email, string htmlMessage, Dictionary<string, string> objDict)
         {
             bool Result = false;
             //  var apiKey = _Configuration["EmailSettings:ApiKey"];
@@ -178,6 +178,24 @@
             {
             }
         }
+
+        public async Task<string> GetIPAddress()
+        {
+            string ip = string.Empty;
+            try
+            {
+                if (_contextAccessor.HttpContext?.Connection?.RemoteIpAddress != null)
+                {
+                    ip = _contextAccessor.HttpContext.Connection.RemoteIpAddress.ToString();
+                }
+            }
+            catch
+            {
+            }
+            return await Task.FromResult(ip);
+        }
+
+        
     }
 
 }

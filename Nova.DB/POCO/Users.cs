@@ -16,7 +16,7 @@ namespace Nova.DB.POCO
 
         [ForeignKey("RoleId")]
         public int RoleId { get; set; }
-        public Roles Role { get; set; }
+        public Roles Role { get; set; } = null!;
 
         public DateTime CreatedDate { get; set; }
         public int CreatedBy { get; set; }
@@ -26,5 +26,7 @@ namespace Nova.DB.POCO
         public bool IsDeleted { get; set; }
         public string? ResetPasswordToken { get; set; }
         public DateTime? ResetPasswordTokenExpiry { get; set; }
+        public string? TwoFactorCode { get; set; }
+        public DateTime? TwoFactorCodeExpiry { get; set; }
     }
 }
