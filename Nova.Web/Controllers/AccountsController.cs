@@ -466,6 +466,13 @@ namespace Nova.Web.Controllers
 
         }
 
+        [HttpGet]
+        [SessionAuthorize("")]
+        public async Task<IActionResult> Activities()
+        {            
+            return View("Activities", await _UserActivities.GetUserActivities(null));
+        }
+
         private void RemoveModelStateItem(String data)
         {
             try

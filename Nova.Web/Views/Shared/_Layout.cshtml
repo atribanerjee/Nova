@@ -106,8 +106,8 @@
                         </svg>
                     </div>
                 </div>
-                <form class="col-sm-4 form-inline search-full d-none d-xl-block" action="#" method="get">
-                    <div class="form-group">
+                <form class="col-sm-4 form-inline search-full d-none d-xl-block" action="#" method="get" >
+                    <div class="form-group" style="display:none;">
                         <div class="Typeahead Typeahead--twitterUsers">
                             <div class="u-posRelative">
                                 <input class="demo-input Typeahead-input form-control-plaintext w-100" type="text" placeholder="Type to Search .." name="q" title="" autofocus>
@@ -448,7 +448,17 @@
                                             <use href="../assets/svg/icon-sprite.svg#fill-sample-page"></use>
                                         </svg><span>Roles</span>
                                     </a>
-                                </li>                                                    
+                                </li>   
+                                <li class="sidebar-list">
+                                    <i class="fa fa-thumb-tack"></i><a class="sidebar-link sidebar-title link-nav" href="@Url.Action("Activities", "Accounts")">
+                                        <svg class="stroke-icon">
+                                            <use href="../assets/svg/icon-sprite.svg#stroke-sample-page"></use>
+                                        </svg>
+                                        <svg class="fill-icon">
+                                            <use href="../assets/svg/icon-sprite.svg#fill-sample-page"></use>
+                                        </svg><span>User Activities</span>
+                                    </a>
+                                </li>
                             </ul>
                         </div>
                         <div class="right-arrow" id="right-arrow"><i data-feather="arrow-right"></i></div>

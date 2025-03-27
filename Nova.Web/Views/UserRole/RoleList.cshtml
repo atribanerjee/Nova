@@ -1,7 +1,7 @@
 ﻿@model List<Nova.Web.ViewModels.UserRoleViewModel>
 @inject Nova.DB.NovaDBContext _db;
 @{
-    ViewData["Title"] = "UserRoleList";
+    ViewData["Title"] = "Role List";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
@@ -24,9 +24,7 @@
     <div class="modal-dialog ">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal">
-                    <span><i class="fal fa-times"></i></span>
-                </button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body body-firmw">
                 <form id="frmRoleInput">
@@ -40,7 +38,7 @@
                         <label class="col-sm-4 pt-2 ">Role</label>
                         <div class="col-sm-8">
                             <input id="InputRoleName" type="text" autocomplete="off" class="form-control" onkeypress="return fnRestrictSpaceSpecial(event)" placeholder="Name">
-                            <small id="InputRoleName-error" class="form-text text-icon-error last none"><i class="fas fa-info-circle"></i><em id="InputRoleName-error-msg">Please intput value.</em></small>
+                            <small id="InputRoleName-error" style="display:none;" class="form-text text-icon-error last"><i class="fas fa-info-circle"></i><em id="InputRoleName-error-msg">Please intput value.</em></small>
                         </div>
 
                     </div>
@@ -48,12 +46,8 @@
                     <div class="form-group group-btn row">
                         <label class="col-sm-4 ">&nbsp;</label>
                         <div class="col-sm-8">
-                            <button type="button" class="btn btn-default" data-dismiss="modal">
-                                <a id="Closebtn" href="javascript:void(0);" class="btn-inny btn-red">Cancel</a>
-                            </button>
-                            <button id="btnSave" type="button" class="btn btn-default">
-                                <a href="javascript:void(0);" class="btn-inny">Save</a>
-                            </button>
+                            <a id="Closebtn" href="javascript:void(0);" data-dismiss="modal" class="btn btn-danger">Cancel</a>
+                            <a id="btnSave" href="javascript:void(0);" class="btn btn-primary">Save</a>
                         </div>
                     </div>
                 </form>
@@ -68,22 +62,19 @@
         <!-- BEGIN col-4 -->
         <div class="col-xl-4">
             <h1 class="page-header ml-5 mt-top1  ">
-              
             </h1>
         </div>
         <!-- END col-4 -->
         <!-- BEGIN col-4 -->
         <div class="col-xl-4">
             <input type="hidden" id="hdnpagename" value="rolelist" />
-           @*  <partial name="_SearchView" /> *@
+            @*  <partial name="_SearchView" /> *@
         </div>
         <!-- END col-4 -->
         <!-- BEGIN col-4 -->
         <div class="col-xl-4 text-right">
             <div class="mr-5 mt-top mr-right ">
-                <button type="button" class="btn btn-default">
-                    <a href="javascript:void(0);" onclick="fnShowRoleModal()" class="btn-inny">Add Role</a>
-                </button>
+                <a class="btn btn-primary" href="javascript:void(0);" onclick="fnShowRoleModal()">Add Role</a>
             </div>
         </div>
         <!-- END col-4 -->
@@ -108,7 +99,7 @@
                     <div class="card card-general-table">
                         <div class="card-body px-0 py-0">
 
-                           @*  <div class="row row-head ">
+                            @*  <div class="row row-head ">
                                 @await Html.PartialAsync("_PageSize", psvm)
                             </div> *@
 
@@ -126,7 +117,7 @@
 
                                         @foreach (Nova.Web.ViewModels.UserRoleViewModel item in Model)
                                         {
-                                          @*   pageCount = item.TotalRecords / item.PageSize;
+                                            @*   pageCount = item.TotalRecords / item.PageSize;
                                             if (item.TotalRecords % item.PageSize != 0)
                                             {
                                                 pageCount = pageCount + 1;
@@ -143,13 +134,13 @@
                                                     <a href="#" onclick="fnUpdateRole('@item.Id','@item.Rolename')" class=" ">
                                                         <i class="fas fa-pen-nib"></i>
                                                     </a>
-                                                   
-                                                        
-                                                            <a href="javascript:void(0);" class=" " id="Delete_@item.Id" onclick='DeleteRole(@item.Id);'>
-                                                                <i class="fas fa-trash"></i>
-                                                            </a>
-                                                     
-                                                    
+
+
+                                                    <a href="javascript:void(0);" class=" " id="Delete_@item.Id" onclick='DeleteRole(@item.Id);'>
+                                                        <i class="fas fa-trash"></i>
+                                                    </a>
+
+
 
                                                 </td>
                                             </tr>
@@ -160,7 +151,7 @@
 
                             </div>
 
-                        
+
 
                         </div>
                     </div>
@@ -177,232 +168,227 @@
 </div>
 
 <script type="text/javascript">
-   var  LastUpdateRoleID = 0;
-    var LastUpdateRoleName="";
-    $(document).ready(function () {
+    var  LastUpdateRoleID = 0;
+     var LastUpdateRoleName="";
+     $(document).ready(function () {
 
-          var successMessage = '@TempData["SuccessMessage"]';
-        if (successMessage) {
-            showToast(successMessage);
-        }
+           var successMessage = '@TempData["SuccessMessage"]';
+         if (successMessage) {
+             showToast(successMessage);
+         }
 
-        // Check for error message
-        var errorMessage = '@TempData["ErrorMessage"]';
-        if (errorMessage) {
-            showToast(errorMessage);
-        }
+         // Check for error message
+         var errorMessage = '@TempData["ErrorMessage"]';
+         if (errorMessage) {
+             showToast(errorMessage);
+         }
 
-        function showToast(message) {
-            var toastEl = document.getElementById('liveToast');
-            var toastBody = toastEl.querySelector('.toast-body');
-            toastBody.textContent = message;
-            var toast = new bootstrap.Toast(toastEl);
-            toast.show();
-        }
+         function showToast(message) {
+             var toastEl = document.getElementById('liveToast');
+             var toastBody = toastEl.querySelector('.toast-body');
+             toastBody.textContent = message;
+             var toast = new bootstrap.Toast(toastEl);
+             toast.show();
+         }
 
-        $("#Closebtn").click(function () {
-                $("#AddRoleModal").modal('hide');
-        });
-
-
-
-        $("#btnSave").click(function () {
-           
-            if ($("#InputRoleName").val() != '') {
-               // fnCloseRoleModal();
-                if (LastUpdateRoleID > 0) { //Update Role
-
-                    $("#InputRoleName-error").addClass('none');
-                    fnCheckDuplicateRoleExecptMe(LastUpdateRoleID);
-                }
-                else {  //Insert Role
-
-                    $("#InputRoleName-error").addClass('none');
-
-                    $.ajax({
-                        type: "GET",
-                        url: '@Url.Action("CheckDulicate", "UserRole")',
-                        data: { 'RoleName': $("#InputRoleName").val() },
-                        success: function (result) {
-                            debugger;
-                            if (result.Result) {
-                                $("#InputRoleName-error").removeClass('none');
-                                $("#InputRoleName-error-msg").html("This role name already exist");
-                                showToast("This role name already exist");
-                            } else {
-
-                                $.ajax({
-                                    type: "POST",
-                                    url: '@Url.Action("Add", "UserRole")',
-                                    data: { 'RoleName': $("#InputRoleName").val() },
-                                    success: function (result) {
-                                        debugger;
-                                       
-                                        $("#AddRoleModal").modal('hide');
-
-                                        $("#InputRoleName").val('');
-                                      
-                                        if (result.result) {
-                                            debugger;
-                                            showToast('Role created successfully.');
-                                          //  location.reload();
-                                        }
-                                        else {
-                                            showToast('Role creatation failed.');
-                                        }
-                                    },
-                                    error: function (ex) {
-                                        if (ex.status === 401) {
-                                            //window.location.replace("/account/login");
-                                        }
-                                    }
-                                });
-                            }
-                        },
-                        error: function (ex) {
-                            if (ex.status === 401) {
-                                //window.location.replace("/account/login");
-                            }
-                        }
-                    });
-                }
-            } else {
-                $("#InputRoleName-error").removeClass('none');
-                $("#InputRoleName-error-msg").html("Please input value");
-            }
-
-        });
-
-    });
-
-     function fnRestrictSpaceSpecial(e) {
-
-        var inputValue = e.charCode;
-        if ((inputValue >= 65 && inputValue <= 90) || (inputValue >= 97 && inputValue <= 122) || (inputValue == 32 || inputValue == 0)) {
-
-            return true;
-        }
-        else {
-            event.preventDefault();
-            return false;
-        }
-    }
-
-     function fnCheckDuplicateRoleExecptMe(LastUpdateRoleID) {
-         debugger;
-        $.ajax({
-            type: "GET",
-            url: '@Url.Action("CheckDulicateExceptMe", "UserRole")',
-            data: { 'RoleID': LastUpdateRoleID, 'RoleName': $("#InputRoleName").val() },
-            success: function (result) {
-
-                if (result.Result) {
-                    $("#InputRoleName-error").removeClass('none');
-                    $("#InputRoleName-error-msg").html("This role name already exists");
-
-                } else {
-                    fnUpdateRoleNameByID(LastUpdateRoleID);
-                }
-
-            },
-            error: function (ex) {
-                if (ex.status === 401) {
-                    //window.location.replace("/account/login");
-                }
-            }
-
-        });
-    }
+         $("#Closebtn").click(function () {
+                 $("#AddRoleModal").modal('hide');
+         });
 
 
-    function fnShowRoleModal() {
-      
-        $("#InputRoleName").val('');
-        $("#AddRoleModal").modal('show');
-        $("#InputRoleName-error").addClass('none');
-        $('#AddorUpdateRole').html('Add new Role');
-    }
-    function fnCloseRoleModal() {
-       LastUpdateRoleID = 0;
-        $("#InputRoleName").val('');
-        $("#AddRoleModal").modal('hide');
-        $("#InputRoleName-error").removeClass('none');
-    }
-    function fnUpdateRole(id, rolename) {
-      
-           LastUpdateRoleID =id;
-             LastUpdateRoleName=rolename;
-        $('#hdnRoleId').val(id);
-      //  $('#txtRoleName').val(rolename);
-         $('#InputRoleName').val(rolename);
-        $('#AddRoleModal').modal('show');
-         $('#AddorUpdateRole').html('Update Role');
-    }
-      function fnUpdateRoleNameByID(LastUpdateRoleID) {
-          debugger;
-        $.ajax({
-            type: "POST",
-             url: '@Url.Action("Edit", "UserRole")',
-             data: { 'RoleID': LastUpdateRoleID, 'RoleName': $("#InputRoleName").val() },
-            success: function (result) {
-              
-                LastUpdateRoleID = 0;
-                $("#AddRoleModal").modal('hide');
-                $("#InputRoleName").val('');
 
-                 if (result.result) {
-                      showsuccess(result.message);
-                    setTimeout(function () { location.reload(); }, 500);
-                }
-                else {
-                    showsuccess(result.Message);
-                }
-            },
-            error: function (ex) {
-                if (ex.status === 401) {
-                    //window.location.replace("/account/login");
-                }
-            }
+         $("#btnSave").click(function () {
 
-        });
-    }
+             if ($("#InputRoleName").val() != '') {
+                // fnCloseRoleModal();
+                 if (LastUpdateRoleID > 0) { //Update Role
+                      $('#InputRoleName-error').hide();
+                     fnCheckDuplicateRoleExecptMe(LastUpdateRoleID);
+                 }
+                 else {  //Insert Role
 
+                      $('#InputRoleName-error').hide();
 
-      function DeleteRole(RoleID) {
-         //
-          var cofirmmessage = 'Are you sure you want to delete this? Note: All the users, using this role will not be able to access the system anymore, until you assign them a new role.';
-         var successmessage = 'Data deleted successfully.';
-         var $element = $(this);
-         customConfirm({ message: cofirmmessage },
-             function (retunVal) {
-                 $.ajax({
-                     type: "POST",
-                       url: "@Url.Action("Delete", "UserRole")",
-                     data: { ID: RoleID },
-                     success: function (data) {
-                         
-                         console.log(data);
-                         if (data.result) {
-                              showsuccess(data.message);
-                             setTimeout(function () { location.reload(); }, 500);
+                     $.ajax({
+                         type: "GET",
+                         url: '@Url.Action("CheckDulicate", "UserRole")',
+                         data: { 'RoleName': $("#InputRoleName").val() },
+                         success: function (result) {
+                             if (result.result) {
+                                 $("#InputRoleName-error-msg").html("This role name already exist");
+                                  $('#InputRoleName-error').show();
+                                 showToast("This role name already exist");
+                             } else {
+
+                                 $.ajax({
+                                     type: "POST",
+                                     url: '@Url.Action("Add", "UserRole")',
+                                     data: { 'RoleName': $("#InputRoleName").val() },
+                                     success: function (result) {
+                                         $("#AddRoleModal").modal('hide');
+
+                                         $("#InputRoleName").val('');
+
+                                         if (result.result) {
+                                             showToast('Role created successfully.');
+                                           //  location.reload();
+                                         }
+                                         else {
+                                             showToast('Role creatation failed.');
+                                         }
+                                     },
+                                     error: function (ex) {
+                                         if (ex.status === 401) {
+                                             //window.location.replace("/account/login");
+                                         }
+                                     }
+                                 });
+                             }
+                         },
+                         error: function (ex) {
+                             if (ex.status === 401) {
+                                 //window.location.replace("/account/login");
+                             }
                          }
-                         else {
-                              showsuccess(data.message);
-                             location.reload();
-                             setTimeout(function () { location.reload(); }, 500);
-                         }
-                     },
-                     error: function (arg) {
-                         alert("Error");
-                     }
+                     });
+                 }
+             } else {
+                 $("#InputRoleName-error-msg").html("Please input value");
+                  $('#InputRoleName-error').show();
+             }
 
-                 });
-             },
-              function (retunVal) {
-                  showalertpopup('No data was deleted.');
-              });
+         });
 
+     });
+
+      function fnRestrictSpaceSpecial(e) {
+
+         var inputValue = e.charCode;
+         if ((inputValue >= 65 && inputValue <= 90) || (inputValue >= 97 && inputValue <= 122) || (inputValue == 32 || inputValue == 0)) {
+
+             return true;
+         }
+         else {
+             event.preventDefault();
+             return false;
+         }
      }
+
+      function fnCheckDuplicateRoleExecptMe(LastUpdateRoleID) {          
+         $.ajax({
+             type: "GET",
+             url: '@Url.Action("CheckDulicateExceptMe", "UserRole")',
+             data: { 'RoleID': LastUpdateRoleID, 'RoleName': $("#InputRoleName").val() },
+             success: function (result) {
+
+                 if (result.result) {                     
+                     $("#InputRoleName-error-msg").html("This role name already exists");
+                     $("#InputRoleName-error").show();
+                 } else {
+                     $("#InputRoleName-error-msg").html("");
+                     $("#InputRoleName-error").hide();
+                     fnUpdateRoleNameByID(LastUpdateRoleID);
+                 }
+
+             },
+             error: function (ex) {
+                 if (ex.status === 401) {
+                     //window.location.replace("/account/login");
+                 }
+             }
+
+         });
+     }
+
+
+     function fnShowRoleModal() {
+
+         $("#InputRoleName").val('');
+         $("#AddRoleModal").modal('show');
+         $('#InputRoleName-error').hide();
+         $('#AddorUpdateRole').html('Add New Role');
+     }
+     function fnCloseRoleModal() {
+        LastUpdateRoleID = 0;
+         $("#InputRoleName").val('');
+         $("#AddRoleModal").modal('hide');
+         $("#InputRoleName-error").removeClass('none');
+     }
+     function fnUpdateRole(id, rolename) {
+
+            LastUpdateRoleID =id;
+              LastUpdateRoleName=rolename;
+         $('#hdnRoleId').val(id);
+       //  $('#txtRoleName').val(rolename);
+          $('#InputRoleName').val(rolename);
+         $('#AddRoleModal').modal('show');
+         $('#InputRoleName-error').hide();
+          $('#AddorUpdateRole').html('Update Role');
+     }
+       function fnUpdateRoleNameByID(LastUpdateRoleID) {           
+         $.ajax({
+             type: "POST",
+              url: '@Url.Action("Edit", "UserRole")',
+              data: { 'RoleID': LastUpdateRoleID, 'RoleName': $("#InputRoleName").val() },
+             success: function (result) {
+
+                 LastUpdateRoleID = 0;
+                 $("#AddRoleModal").modal('hide');
+                 $("#InputRoleName").val('');
+
+                  if (result.result) {
+                       showsuccess(result.message);
+                     setTimeout(function () { location.reload(); }, 500);
+                 }
+                 else {
+                     showsuccess(result.Message);
+                 }
+             },
+             error: function (ex) {
+                 if (ex.status === 401) {
+                     //window.location.replace("/account/login");
+                 }
+             }
+
+         });
+     }
+
+
+       function DeleteRole(RoleID) {
+          //
+           var cofirmmessage = 'Are you sure you want to delete this? Note: All the users, using this role will not be able to access the system anymore, until you assign them a new role.';
+          var successmessage = 'Data deleted successfully.';
+          var $element = $(this);
+          customConfirm({ message: cofirmmessage },
+              function (retunVal) {
+                  $.ajax({
+                      type: "POST",
+                        url: "@Url.Action("Delete", "UserRole")",
+                      data: { ID: RoleID },
+                      success: function (data) {
+
+                          console.log(data);
+                          if (data.result) {
+                               showsuccess(data.message);
+                              setTimeout(function () { location.reload(); }, 500);
+                          }
+                          else {
+                               showsuccess(data.message);
+                              location.reload();
+                              setTimeout(function () { location.reload(); }, 500);
+                          }
+                      },
+                      error: function (arg) {
+                          alert("Error");
+                      }
+
+                  });
+              },
+               function (retunVal) {
+                   showalertpopup('No data was deleted.');
+               });
+
+      }
 </script>
 
 

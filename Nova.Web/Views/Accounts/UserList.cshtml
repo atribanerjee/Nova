@@ -27,7 +27,31 @@
 <div class="app-content-holder general-gaping ">
 
     <!-- BEGIN row -->
-    <a class="btn btn-active" href="@Url.Action("Add", "Accounts")">Add User</a>
+    <div class="page-row-head mb-1">
+        <div class="row mr-0 ml-0">
+            <!-- BEGIN col-4 -->
+            <div class="col-xl-4">
+                <h1 class="page-header ml-5 mt-top1  ">
+                </h1>
+            </div>
+            <!-- END col-4 -->
+            <!-- BEGIN col-4 -->
+            <div class="col-xl-4">
+               
+            </div>
+            <!-- END col-4 -->
+            <!-- BEGIN col-4 -->
+            <div class="col-xl-4 text-right">
+                <div class="mr-5 mt-top mr-right ">
+                    <a class="btn btn-primary" href="@Url.Action("Add", "Accounts")">Add User</a>
+                </div>
+            </div>
+            <!-- END col-4 -->
+        </div>
+    </div>
+
+
+    
     <div class="row ">
 
         <!-- BEGIN col-12 -->
@@ -56,7 +80,7 @@
                                             <th scope="col">Email</th>
                                             <th scope="col">Username</th>
                                             <th scope="col">Role</th>
-                                            <th scope="col">CreatedDate</th>
+                                            <th scope="col">Date</th>
                                             <th scope="col">Actions</th>
                                         </tr>
                                     </thead>
@@ -81,7 +105,7 @@
                                                 <td>@item.Email</td>
                                                 <td>@item.Username</td>
                                                 <td>@item.Rolename</td>
-                                                <td>@item.CreatedDate</td>
+                                                <td>@item.CreatedDate.ToString("MM-dd-yyyy HH:mm:ss")</td>
                                                 <td class="dt-buttons">
                                                     <a href="@Url.Action("Edit", "Accounts", new { ID = item.Id })" class=" ">
                                                         <i class="fas fa-pen-nib" data-toggle="tooltip" data-placement="bottom" title="Edit"></i>
