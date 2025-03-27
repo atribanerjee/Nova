@@ -21,13 +21,15 @@ namespace Nova.Web.Controllers
         private IUserServices _Service;
         private IUtilityServices _Utility;
         private IUserActivities _UserActivities;
+        private IuserRoleService _userRoleService;
 
-        public AccountsController(NovaDBContext db, IUserServices Ser, IUtilityServices Uti, IUserActivities userActivities)
+        public AccountsController(NovaDBContext db, IUserServices Ser, IUtilityServices Uti, IUserActivities userActivities, IuserRoleService iuserRoleService)
         {
             _db = db;
             _Service = Ser;
             _Utility = Uti;
             _UserActivities = userActivities;
+            _userRoleService = iuserRoleService;
         }
 
         [HttpGet]
@@ -324,6 +326,43 @@ namespace Nova.Web.Controllers
             return View("UserList", await _Service.GetAllUsersList(UVM));
         }
 
+
+        [HttpGet]
+        [SessionAuthorize("")]
+        public async Task<IActionResult> Add()
+        {
+            UserViewModel uvm = new UserViewModel();
+            uvm.ddlRoles = await _userRoleService.GetAllRoleListAsDropdown();
+            return View(uvm);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [SessionAuthorize("")]
+        public async Task<IActionResult> Add([FromForm] UserViewModel model)
+        {
+            RemoveModelStateItem("Password");
+            if (ModelState.IsValid)
+            {
+                bool checkduplicateemail = await _Service.CheckDuplicateEmail(model.Email, null);
+                bool checkduplicateusername = await _Service.CheckDuplicateUsername(model.Username, null);
+                if(checkduplicateemail)
+                {
+                    ModelState.AddModelError("Email", "Email already exists.");
+                }
+                if (checkduplicateusername)
+                {
+                    ModelState.AddModelError("Username", "Username already exists.");
+                }
+                if (!checkduplicateemail && !checkduplicateusername && await _Service.SaveUser(model))
+                {
+                    return RedirectToAction("UserList", "Accounts");
+                }
+            }
+            model.ddlRoles = await _userRoleService.GetAllRoleListAsDropdown();
+            return View(model);
+        }
+
         [HttpGet]
         [SessionAuthorize("")]
         public async Task<IActionResult> Edit(int ID)
@@ -332,9 +371,7 @@ namespace Nova.Web.Controllers
 
             uvm = await _Service.GetUserDetailByUserID(ID);
 
-            //uvm.UserRoleList = UM.GetRoleList();
-
-            //   ViewBag.LoggedInUserRoleID = UM.GetLoggedInUserInfo().UserRoleID;
+            uvm.ddlRoles = await _userRoleService.GetAllRoleListAsDropdown();
 
             return View(uvm);
 
@@ -345,25 +382,23 @@ namespace Nova.Web.Controllers
         [SessionAuthorize("")]
         public async Task<IActionResult> Edit([FromForm] UserViewModel model)
         {
-            int? uid = 0;
-
-            RemoveModelStateItem("password,NewPassword,ConfirmPassword,forgotpasswordguid");
+            RemoveModelStateItem("Password,NewPassword,ConfirmPassword");
 
             if (ModelState.IsValid)
             {
                 var userid = _Service.GetUserDataFromSession().Id;
-                // model = _Service.GetUsersDetails(ID); 
+
                 Int32 id = 0;
-                bool checkduplicateemai = await _Service.CheckDuplicateEmail(model.Email, model.Id);
+                bool checkduplicateemail = await _Service.CheckDuplicateEmail(model.Email, model.Id);
                 bool checkduplicateusername = await _Service.CheckDuplicateUsername(model.Username, model.Id);
-                if (!checkduplicateemai && !checkduplicateusername)
+                if (!checkduplicateemail && !checkduplicateusername)
                 {
                     id = await _Service.UpdateUser(model);
                     return RedirectToAction("UserList", "Accounts");
                 }
                 else
                 {
-                    if (checkduplicateemai)
+                    if (checkduplicateemail)
                     {
                         ModelState.AddModelError("Email", "Email already exists.");
                     }

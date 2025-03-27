@@ -20,7 +20,7 @@ namespace Nova.Web.ViewModels
 
 
         [DisplayName("User Name")]
-        [Required(ErrorMessage = "User Name is required")]
+        [Required(ErrorMessage = "Username is required")]
         [StringLength(50, MinimumLength = 3)]
         public string Username { get; set; }
 

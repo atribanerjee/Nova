@@ -1,4 +1,6 @@
-﻿using Nova.DB;
+﻿using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
+using Nova.DB;
 using Nova.Web.Interfaces;
 using Nova.Web.Utitlity;
 using Nova.Web.ViewModels;
@@ -190,7 +192,25 @@ namespace Nova.Web.Models
 
             return Result;
         }
-
-
+        public async Task<List<SelectListItem>> GetAllRoleListAsDropdown()
+        {
+            List<SelectListItem> _List = new List<SelectListItem>();
+            try
+            {
+                _List = await (from r in _Db.Roles
+                         where !r.IsDeleted
+                         orderby r.Id descending
+                         select new SelectListItem
+                         {
+                             Value = r.Id.ToString(),
+                             Text = r.Rolename
+                         }).ToListAsync();
+            }
+            catch (Exception Ex)
+            {
+                
+            }
+            return _List;
+        }
     }
 }

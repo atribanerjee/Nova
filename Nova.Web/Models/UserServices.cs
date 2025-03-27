@@ -267,13 +267,6 @@ namespace Nova.Web.Models
                                        TwoFactorCodeExpiry = u.TwoFactorCodeExpiry
                                    }).FirstOrDefaultAsync() ?? new UserViewModel();
 
-                    model.ddlRoles = await (from r in _Db.Roles
-                                            where !r.IsDeleted
-                                            select new SelectListItem
-                                            {
-                                                Text = r.Rolename,
-                                                Value = r.Id.ToString()
-                                            }).ToListAsync();
                 }
             }
             catch (Exception ex)
@@ -282,45 +275,73 @@ namespace Nova.Web.Models
             }
             return model;
         }
-        public async Task<bool> CheckDuplicateEmail(string EmailID, int userid)
+        public async Task<bool> CheckDuplicateEmail(string EmailID, int? userid)
         {
             bool result = false;
-
+            var model = new UserViewModel();
             try
             {
-                var UVM = await (from u in _Db.Users
-                                 where u.Email.ToLower().Trim() == EmailID.Trim().ToLower() && !u.IsDeleted && u.Id != userid
-                                 select new UserViewModel
-                                 {
-                                     Username = u.Username
-                                 }).FirstOrDefaultAsync();
+                if (userid != null && userid > 0)
+                {
+                    model = await (from u in _Db.Users
+                                   where u.Email.ToLower().Trim() == EmailID.Trim().ToLower() && !u.IsDeleted && u.Id != userid
+                                   select new UserViewModel
+                                   {
+                                       Id = u.Id,
+                                       Username = u.Username
+                                   }).FirstOrDefaultAsync();
+                }
+                else
+                {
+                    model = await (from u in _Db.Users
+                                   where u.Email.ToLower().Trim() == EmailID.Trim().ToLower() && !u.IsDeleted
+                                   select new UserViewModel
+                                   {
+                                       Id = u.Id,
+                                       Username = u.Username
+                                   }).FirstOrDefaultAsync();
+                }
 
-                if (UVM != null)
+                if (model != null && model.Id > 0)
                 {
                     result = true;
                 }
             }
             catch (Exception Ex)
             {
-                // Handle exception
+
             }
             return result;
         }
 
-        public async Task<bool> CheckDuplicateUsername(string userName, int userid)
+        public async Task<bool> CheckDuplicateUsername(string userName, int? userid)
         {
             bool result = false;
+            var model = new UserViewModel();
             try
             {
-                var UVM = await (from u in _Db.Users
-                                 where u.Username.ToLower() == userName.Trim().ToLower() && !u.IsDeleted && u.Id != userid
-                                 select new UserViewModel
-                                 {
-                                     Username = u.Username
-                                 }).FirstOrDefaultAsync();
+                if (userid != null && userid > 0)
+                {
+                    model = await (from u in _Db.Users
+                                   where u.Username.ToLower() == userName.Trim().ToLower() && !u.IsDeleted && u.Id != userid
+                                   select new UserViewModel
+                                   {
+                                       Id = u.Id,
+                                       Username = u.Username
+                                   }).FirstOrDefaultAsync();
+                }
+                else
+                {
+                    model = await (from u in _Db.Users
+                                   where u.Username.ToLower() == userName.Trim().ToLower() && !u.IsDeleted
+                                   select new UserViewModel
+                                   {
+                                       Id = u.Id,
+                                       Username = u.Username
+                                   }).FirstOrDefaultAsync();
+                }
 
-
-                if (UVM != null)
+                if (model != null && model.Id > 0)
                 {
                     result = true;
                 }
@@ -481,6 +502,35 @@ namespace Nova.Web.Models
                     await _Db.SaveChangesAsync();
                     Result = true;
                 }
+            }
+            catch (Exception ex)
+            {
+
+            }
+            return Result;
+        }
+
+        public async Task<bool> SaveUser(UserViewModel model)
+        {
+            bool Result = false;
+            try
+            {
+                var entity = new Users();
+
+                entity.Firstname = model.Firstname.Trim();
+                entity.Lastname = model.Lastname.Trim();
+                entity.Email = model.Email.Trim().ToLower();
+                entity.Username = model.Username.Trim();
+                entity.RoleId = model.RoleId;
+                entity.Password = model.NewPassword;
+                entity.CreatedDate = DateTime.Now;
+                entity.CreatedBy = GetUserDataFromSession().Id;
+                entity.IsActive = true;
+                entity.IsDeleted = false;
+
+                _Db.Users.Add(entity);
+                await _Db.SaveChangesAsync();
+                Result = true;
             }
             catch (Exception ex)
             {

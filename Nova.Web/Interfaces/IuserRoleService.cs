@@ -1,15 +1,17 @@
-﻿using Nova.Web.ViewModels;
+﻿using Microsoft.AspNetCore.Mvc.Rendering;
+using Nova.Web.ViewModels;
 
 namespace Nova.Web.Interfaces
 {
     public interface IuserRoleService
     {
-        Task<List<UserRoleViewModel>> GetAllRoleList(UserRoleViewModel RVM, string searchvalue);
-        Task<Boolean> CheckDuplicateRoleName(String RoleName);
-        Task<Boolean> AddNewRole(UserRoleViewModel model);
-        Task<Boolean> CheckDuplicateRoleNameExceptMe(int RoleID, String RoleName);
-        Task<UserRoleViewModel> GetRoleDetailByID(int RoleID);
-        Task<bool> UpdateRole(UserRoleViewModel model);
-        Task<bool> DeleteRolebyID(int ID);
+        public Task<List<UserRoleViewModel>> GetAllRoleList(UserRoleViewModel RVM, string searchvalue);
+        public Task<Boolean> CheckDuplicateRoleName(String RoleName);
+        public Task<Boolean> AddNewRole(UserRoleViewModel model);
+        public Task<Boolean> CheckDuplicateRoleNameExceptMe(int RoleID, String RoleName);
+        public Task<UserRoleViewModel> GetRoleDetailByID(int RoleID);
+        public Task<bool> UpdateRole(UserRoleViewModel model);
+        public Task<bool> DeleteRolebyID(int ID);
+        public Task<List<SelectListItem>> GetAllRoleListAsDropdown();
     }
 }
