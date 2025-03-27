@@ -61,11 +61,12 @@
             <div class="modal-dialog modal-sm">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h1 class="modal-title fs-5" id="exampleModalLabel">Forgot Password</h1>
+                        <h1 class="modal-title fs-5" id="modalTitle">Forgot Password</h1>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <p>Enter your e-mail address below to reset your password.</p>
+                        @Html.HiddenFor(m=>m.isPassword)                        
+                        <p id="modalMessage">Enter your e-mail address below to reset your password.</p>
                         @Html.TextBoxFor(m => m.Email, new { @class = "form-control", @placeholder = "Email Address", @autofocus = "", @autocomplete = "off" })
                         <span class="text-danger"> @Html.ValidationMessageFor(m => m.Email)</span>
                     </div>
@@ -117,7 +118,7 @@
                                     <label class="col-form-label">Username</label>
                                     @Html.TextBoxFor(m => m.Username, new { @class = "form-control", @placeholder = "Username", @autocomplete = "off", name = "username" })
                                     @Html.ValidationMessageFor(m => m.Username, "", new { @class = "text-danger" })
-
+                                    <a class="link" onclick="setForgotUsername();" href="javscript:void(0);" id="ShowModal2" data-bs-toggle="modal" data-bs-target="#forgotPasswordModal">Forgot username?</a>
                                 </div>
                                 <div class="form-group">
                                     <label class="col-form-label">Password</label>
@@ -131,7 +132,8 @@
                                     <div class="checkbox p-0">
                                         @Html.CheckBoxFor(m => m.RememberMe)
                                         <label class="" for="RememberMe">Remember me</label>
-                                    </div><a class="link" href="javscript:void(0);" id="ShowModal" data-bs-toggle="modal" data-bs-target="#forgotPasswordModal">Forgot password?</a>
+                                    </div>
+                                    <a class="link" onclick="setForgotPassword();" href="javscript:void(0);" id="ShowModal" data-bs-toggle="modal" data-bs-target="#forgotPasswordModal">Forgot password?</a>
                                     <button class="btn btn-primary btn-block w-100" type="submit">Sign in</button>
                                 </div>
                             </form>
@@ -218,5 +220,18 @@
             toastBody.textContent = message;
             var toast = new bootstrap.Toast(toastEl);
             toast.show();
+    }
+    function setForgotUsername()
+    {
+        $('#isPassword').val('false');
+        $('#modalTitle').html('Forgot Username');
+        $('#modalMessage').html('Enter your e-mail address below to retrieve your username.');
+    }
+
+    function setForgotPassword()
+    {
+        $('#isPassword').val('true');
+        $('#modalTitle').html('Forgot Password');
+        $('#modalMessage').html('Enter your e-mail address below to reset your password.');
     }
 </script>

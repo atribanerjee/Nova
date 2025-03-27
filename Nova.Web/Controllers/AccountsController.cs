@@ -142,42 +142,57 @@ namespace Nova.Web.Controllers
         public async Task<IActionResult> ForgetPassword([FromForm] UserViewModel model)
         {
             UserViewModel lvm = new UserViewModel();
-            if (!string.IsNullOrEmpty(model.Email.ToString()))
+            if (!string.IsNullOrEmpty(model.Email) && !string.IsNullOrWhiteSpace(model.Email))
             {
-                lvm = await _Service.CheckEmailExists(model.Email.ToString());
+                lvm = await _Service.CheckEmailExists(model.Email);
                 if (lvm != null)
                 {
-                    Guid guid = Guid.NewGuid();
-
-                    Dictionary<string, string> objDict = new Dictionary<string, string>();
-                    objDict.Add("Pseudo", lvm.Firstname);
-                    objDict.Add("Year", DateTime.Now.Year.ToString());
-
-                    Microsoft.Extensions.Configuration.IConfiguration _Configuration = new ConfigurationBuilder()
-                        .SetBasePath(System.IO.Directory.GetCurrentDirectory())
-                        .AddJsonFile("appsettings.json")
-                        .Build();
-
-                    objDict.Add("ActivationUrl", _Configuration["EmailSettings:BaseURl"] + "Accounts/ResetPasswords/" + guid);
-                    var SendmailResult = await _Utility.SendEmailAsync("Notification: Reset Password Requested", model.Email, "ForgotPassword.html", objDict);
-                    if (SendmailResult)
+                    if (model.isPassword!=null && !model.isPassword.Value)
                     {
-                        TempData["SuccessMessage"] = "An email has been sent to your registered email. Please check your email.";
+                        Dictionary<string, string> objDict = new Dictionary<string, string>();
+                        objDict.Add("Pseudo", lvm.Firstname);
+                        objDict.Add("UName", lvm.Username);
+
+                        var SendmailResult = await _Utility.SendEmailAsync("Notification: Username Requested", model.Email, "ForgotUserName.html", objDict);
+                        if (SendmailResult)
+                        {
+                            TempData["SuccessMessage"] = "Your username has been sent to your registered email. Please check your email.";
+                        }
+                        else
+                        {
+                            TempData["SuccessMessage"] = "Email sending is failed.";
+                        }
                     }
                     else
                     {
-                        TempData["SuccessMessage"] = "Email sending is failed.";
-                    }
+                        Guid guid = Guid.NewGuid();
 
-                    bool Saveguidornot = await _Service.SaveGuid(guid.ToString(), lvm.Id);
-                    TempData["IsShowVerification"] = "true";
+                        Dictionary<string, string> objDict = new Dictionary<string, string>();
+                        objDict.Add("Pseudo", lvm.Firstname);
+
+                        Microsoft.Extensions.Configuration.IConfiguration _Configuration = new ConfigurationBuilder()
+                            .SetBasePath(System.IO.Directory.GetCurrentDirectory())
+                            .AddJsonFile("appsettings.json")
+                            .Build();
+
+                        objDict.Add("ActivationUrl", _Configuration["EmailSettings:BaseURl"] + "Accounts/ResetPasswords/" + guid);
+                        var SendmailResult = await _Utility.SendEmailAsync("Notification: Reset Password Requested", model.Email, "ForgotPassword.html", objDict);
+                        if (SendmailResult)
+                        {
+                            TempData["SuccessMessage"] = "An email has been sent to your registered email. Please check your email.";
+                        }
+                        else
+                        {
+                            TempData["SuccessMessage"] = "Email sending is failed.";
+                        }
+
+                        bool Saveguidornot = await _Service.SaveGuid(guid.ToString(), lvm.Id);
+                        TempData["IsShowVerification"] = "true";
+                    }
                     return Json(new { url = Url.Action("Login", "Accounts") });
                 }
-                else
-                {
-                    TempData["SuccessMessage"] = "Invalid Email address.";
-                }
             }
+            TempData["SuccessMessage"] = "Invalid Email address.";
             return Json(new { url = Url.Action("Login", "Accounts") });
 
 

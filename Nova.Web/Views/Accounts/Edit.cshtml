@@ -26,7 +26,10 @@
         @Html.TextBoxFor(m => m.Email, new { @class = "form-control", @placeholder = "Email", @readonly = "true" })
         @Html.ValidationMessageFor(m => m.Email, "", new { @class = "text-danger" })
     </div>
-    
+    <div class="col-4">
+        <label class="form-label">Phone</label>
+        @Html.TextBoxFor(m => m.Phone, new { @class = "form-control", @placeholder = "Phone", @maxlength = 12 })
+    </div>
     <div class="col-4">
         <label class="form-label">Role</label>
         @Html.DropDownListFor(m => m.RoleId, Model.ddlRoles, new { @class = "form-control" })

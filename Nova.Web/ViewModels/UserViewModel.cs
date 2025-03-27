@@ -67,5 +67,7 @@ namespace Nova.Web.ViewModels
         public DateTime? TwoFactorCodeExpiry { get; set; }
 
         public List<SelectListItem>? ddlRoles { get; set; }
+        public string? Phone { get; set; }
+        public bool? isPassword { get; set; } = true;
     }
 }

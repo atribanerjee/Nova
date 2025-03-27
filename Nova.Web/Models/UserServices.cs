@@ -106,6 +106,15 @@ namespace Nova.Web.Models
                                        Email = u.Email ?? string.Empty,
                                        Username = u.Username ?? string.Empty,
                                        CreatedDate = u.CreatedDate,
+                                       IsActive = u.IsActive,
+                                       IsDeleted = u.IsDeleted,
+                                       RoleId = u.RoleId,
+                                       Rolename = u.Role.Rolename,
+                                       ResetPasswordToken = u.ResetPasswordToken,
+                                       ResetPasswordTokenExpiry = u.ResetPasswordTokenExpiry,
+                                       TwoFactorCode = u.TwoFactorCode,
+                                       TwoFactorCodeExpiry = u.TwoFactorCodeExpiry,
+                                       Phone = u.Phone
                                    }).FirstOrDefaultAsync() ?? new UserViewModel();
 
                 }
@@ -227,7 +236,8 @@ namespace Nova.Web.Models
                                    ResetPasswordToken = u.ResetPasswordToken,
                                    ResetPasswordTokenExpiry = u.ResetPasswordTokenExpiry,
                                    TwoFactorCode = u.TwoFactorCode,
-                                   TwoFactorCodeExpiry = u.TwoFactorCodeExpiry
+                                   TwoFactorCodeExpiry = u.TwoFactorCodeExpiry,
+                                   Phone = u.Phone
                                }).ToListAsync();
 
             }
@@ -264,7 +274,8 @@ namespace Nova.Web.Models
                                        ResetPasswordToken = u.ResetPasswordToken,
                                        ResetPasswordTokenExpiry = u.ResetPasswordTokenExpiry,
                                        TwoFactorCode = u.TwoFactorCode,
-                                       TwoFactorCodeExpiry = u.TwoFactorCodeExpiry
+                                       TwoFactorCodeExpiry = u.TwoFactorCodeExpiry,
+                                       Phone = u.Phone
                                    }).FirstOrDefaultAsync() ?? new UserViewModel();
 
                 }
@@ -381,7 +392,13 @@ namespace Nova.Web.Models
                             entity.ModifiedDate = DateTime.Now;
                             entity.ModifiedBy = GetUserDataFromSession().Id;
                         }
-                        if (!string.IsNullOrEmpty(model.TwoFactorCode) && !string.IsNullOrWhiteSpace(model.TwoFactorCode) && entity.TwoFactorCode.Trim().ToLower() != model.TwoFactorCode.Trim().ToLower())
+                        if (!string.IsNullOrEmpty(model.Phone) && !string.IsNullOrWhiteSpace(model.Phone))
+                        {
+                            entity.Phone = model.Phone;
+                            entity.ModifiedDate = DateTime.Now;
+                            entity.ModifiedBy = GetUserDataFromSession().Id;
+                        }
+                        if (!string.IsNullOrEmpty(model.TwoFactorCode) && !string.IsNullOrWhiteSpace(model.TwoFactorCode))
                         {
                             entity.TwoFactorCode = model.TwoFactorCode;
                             entity.TwoFactorCodeExpiry = model.TwoFactorCodeExpiry;
@@ -521,6 +538,7 @@ namespace Nova.Web.Models
                 entity.Lastname = model.Lastname.Trim();
                 entity.Email = model.Email.Trim().ToLower();
                 entity.Username = model.Username.Trim();
+                entity.Phone = model.Phone.Trim();
                 entity.RoleId = model.RoleId;
                 entity.Password = model.NewPassword;
                 entity.CreatedDate = DateTime.Now;

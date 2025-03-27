@@ -28,5 +28,6 @@ namespace Nova.DB.POCO
         public DateTime? ResetPasswordTokenExpiry { get; set; }
         public string? TwoFactorCode { get; set; }
         public DateTime? TwoFactorCodeExpiry { get; set; }
+        public string? Phone { get; set; }
     }
 }
