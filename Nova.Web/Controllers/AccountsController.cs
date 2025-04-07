@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace Nova.Web.Controllers
 {
-    [ResponseCache(Location = ResponseCacheLocation.None, NoStore = true)]
+    [ResponseCache(Location = ResponseCacheLocation.None, NoStore = true)]    
     public class AccountsController : Controller
     {
         NovaDBContext _db;
@@ -33,6 +33,7 @@ namespace Nova.Web.Controllers
         }
 
         [HttpGet]
+        [AllowAnonymous]
         public async Task<IActionResult> Login()
         {
             UserViewModel model = new UserViewModel();
@@ -67,6 +68,7 @@ namespace Nova.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [AllowAnonymous]
         public async Task<IActionResult> Login([FromForm] UserViewModel model)
         {
             UserViewModel UVM = new UserViewModel();
@@ -104,6 +106,7 @@ namespace Nova.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [AllowAnonymous]
         public async Task<IActionResult> TwoFactorAuthentication([FromForm] UserViewModel model)
         {
             RemoveModelStateItem("Firstname,Lastname,Email,NewPassword,ConfirmPassword,Password,Username");
@@ -123,6 +126,7 @@ namespace Nova.Web.Controllers
             return Json(new { url = Url.Action("Login", "Accounts") });
         }
 
+        [SessionAuthorize("")]
         public async Task<IActionResult> LogOut()
         {
             await _UserActivities.SaveActivity(_Service.GetUserDataFromSession().Id, "User log out successfully from IP - " + await _Utility.GetIPAddress());
@@ -139,6 +143,7 @@ namespace Nova.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [AllowAnonymous]
         public async Task<IActionResult> ForgetPassword([FromForm] UserViewModel model)
         {
             UserViewModel lvm = new UserViewModel();
@@ -199,6 +204,7 @@ namespace Nova.Web.Controllers
         }
 
         [HttpGet]
+        [AllowAnonymous]
         public async Task<IActionResult> ResetPasswords(string ID)//guid
         {
             // UserModel um = new UserModel();
@@ -217,6 +223,7 @@ namespace Nova.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [AllowAnonymous]
         public async Task<IActionResult> ResetPasswords(UserViewModel model)
         {
             RemoveModelStateItem("Firstname,Lastname,Email,Username,NewPassword,Password");
@@ -256,6 +263,7 @@ namespace Nova.Web.Controllers
         }
 
         [HttpGet]
+        [SessionAuthorize("")]
         public IActionResult ResetPassword()
         {
             return View();
@@ -310,6 +318,7 @@ namespace Nova.Web.Controllers
         }
 
         [HttpGet]
+        [SessionAuthorize("")]
         public async Task<JsonResult> Checkpassword(String Password)
         {
             // string? uid = _Utility.GetSessionValue("LoggedInUserID").ToString();
@@ -487,7 +496,7 @@ namespace Nova.Web.Controllers
         {            
             return View("Activities", await _UserActivities.GetUserActivities(null));
         }
-
+        [AllowAnonymous]
         private void RemoveModelStateItem(String data)
         {
             try
