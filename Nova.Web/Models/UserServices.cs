@@ -540,7 +540,7 @@ namespace Nova.Web.Models
                 entity.Username = model.Username.Trim();
                 entity.Phone = model.Phone.Trim();
                 entity.RoleId = model.RoleId;
-                entity.Password = await _Utility.Encrypt(model.Password);
+                entity.Password = await _Utility.Encrypt(model.NewPassword);
                 entity.CreatedDate = DateTime.Now;
                 entity.CreatedBy = GetUserDataFromSession().Id;
                 entity.IsActive = true;
