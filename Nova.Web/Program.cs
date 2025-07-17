@@ -33,14 +33,14 @@ builder.Services.AddSession(options =>
     options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
 });
 
-builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-    .AddCookie(options =>
-    {
-        options.LoginPath = "/Accounts/Login";
-        options.LogoutPath = "/Accounts/LogOut";
-        options.ExpireTimeSpan = TimeSpan.FromDays(30); // Set default expiration time
-        options.SlidingExpiration = true;
-    });
+//builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+//    .AddCookie(options =>
+//    {
+//         options.LoginPath = "/Accounts/Login";
+//        options.LogoutPath = "/Accounts/LogOut";
+//        options.ExpireTimeSpan = TimeSpan.FromDays(30); // Set default expiration time
+//        options.SlidingExpiration = true;
+//    });
 
 
 var app = builder.Build();
