@@ -103,7 +103,7 @@
 
             var client = new SendGridClient(_Configuration["EmailSettings:ApiKey"]);
             // var from_email = new EmailAddress("amit.chakraborty@baseclass.co.in", "Example User");
-            var from_email = new EmailAddress(_Configuration["EmailSettings:SenderEmail"], "Support@novaassetmanagement.net");
+            var from_email = new EmailAddress(_Configuration["EmailSettings:SenderEmail"], "support@medwatchtech.com");
             var to_email = new EmailAddress(email);
             var plainTextContent = " ";
             var htmlContent = ReadHtmlFile(objDict, htmlMessage);
