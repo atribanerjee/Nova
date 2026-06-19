@@ -12,37 +12,58 @@ namespace Nova.Web.Models
     {
         public NovaDBContext _Db;
         private IUtilityServices _Utility;
-        public UserServices(NovaDBContext Db, IUtilityServices Utility)
+        private IPasswordHasherService _passwordHasher;
+        private ILogger<UserServices> _logger;
+        public UserServices(NovaDBContext Db, IUtilityServices Utility, IPasswordHasherService passwordHasher, ILogger<UserServices> logger)
         {
             _Db = Db;
             _Utility = Utility;
+            _passwordHasher = passwordHasher;
+            _logger = logger;
         }
         public async Task<UserViewModel> CheckLogin(UserViewModel model)
         {
-            UserViewModel UVM = new UserViewModel();
+            // Fetch by username only — we can't filter on password in SQL because each
+            // stored hash has its own salt. Verify the hash in code instead.
+            var user = await _Db.Users
+                .Include(u => u.Role)
+                .FirstOrDefaultAsync(u =>
+                    u.IsActive &&
+                    !u.IsDeleted &&
+                    u.Username == model.Username);
 
-            string password = await _Utility.Encrypt(model.Password);
-            UVM = await (from u in _Db.Users
-                         where u.IsActive && !u.IsDeleted && u.Username == model.Username && u.Password == password
-                         select new UserViewModel
-                         {
-                             Id = u.Id,
-                             Username = u.Username ?? string.Empty,
-                             Firstname = u.Firstname ?? string.Empty,
-                             Lastname = u.Lastname ?? string.Empty,
-                             Email = u.Email ?? string.Empty,
-                             RoleId = u.RoleId,
-                             Password = model.Password,
-                             Rolename = u.Role.Rolename
-                         }).FirstOrDefaultAsync() ?? new UserViewModel();
-
-            if (UVM != null && UVM.Id > 0)
+            if (user == null)
             {
-                return UVM;
+                return new UserViewModel();
             }
 
-            return new UserViewModel();
+            bool isValid = _passwordHasher.VerifyPassword(user.Password, model.Password, out bool needsRehash);
+            if (!isValid)
+            {
+                return new UserViewModel();
+            }
+
+            // If the stored hash used older parameters, transparently upgrade it on
+            // successful login. The user never notices.
+            if (needsRehash)
+            {
+                user.Password = _passwordHasher.HashPassword(model.Password);
+                await _Db.SaveChangesAsync();
+            }
+
+            return new UserViewModel
+            {
+                Id = user.Id,
+                Username = user.Username ?? string.Empty,
+                Firstname = user.Firstname ?? string.Empty,
+                Lastname = user.Lastname ?? string.Empty,
+                Email = user.Email ?? string.Empty,
+                RoleId = user.RoleId,
+                Rolename = user.Role.Rolename
+                // NOTE: do NOT echo the password back into the view model.
+            };
         }
+
 
         public async Task<UserViewModel> CheckEmailExists(string EmailID)
         {
@@ -71,83 +92,92 @@ namespace Nova.Web.Models
             return UVM;
         }
 
-        public async Task<bool> SaveGuid(string guid, int UserID)
+        public async Task<bool> SaveGuid(string guid, int userId)
         {
-            bool Result = false;
-            var entity = await _Db.Users.Where(x => x.Id == UserID && x.IsActive && !x.IsDeleted).FirstOrDefaultAsync();
-
-            if (entity != null)
+            try
             {
-                entity.ResetPasswordToken = guid;
-                entity.ResetPasswordTokenExpiry = DateTime.Now;
-                _Db.Users.Update(entity);
+                var user = await _Db.Users
+                    .FirstOrDefaultAsync(u => u.Id == userId && u.IsActive && !u.IsDeleted);
+
+                if (user == null)
+                {
+                    return false;
+                }
+
+                user.ResetPasswordToken = guid;
+                // Give the reset link a real, bounded lifetime (1 hour).
+                user.ResetPasswordTokenExpiry = DateTime.UtcNow.AddHours(1);
+
                 await _Db.SaveChangesAsync();
-                Result = true;
-            }
-            return Result;
-        }
-
-        public async Task<UserViewModel> GetUserDetailByGUID(string guid)
-        {
-            UserViewModel model = new UserViewModel();
-
-            try
-            {
-                if (!string.IsNullOrEmpty(guid))
-                {
-                    model = await (from u in _Db.Users
-                                   where !u.IsDeleted && u.ResetPasswordToken == guid
-                                   select new UserViewModel
-                                   {
-                                       Id = u.Id,
-                                       UserId = u.Id,
-                                       Firstname = u.Firstname ?? string.Empty,
-                                       Lastname = u.Lastname ?? string.Empty,
-                                       Email = u.Email ?? string.Empty,
-                                       Username = u.Username ?? string.Empty,
-                                       CreatedDate = u.CreatedDate,
-                                       IsActive = u.IsActive,
-                                       IsDeleted = u.IsDeleted,
-                                       RoleId = u.RoleId,
-                                       Rolename = u.Role.Rolename,
-                                       ResetPasswordToken = u.ResetPasswordToken,
-                                       ResetPasswordTokenExpiry = u.ResetPasswordTokenExpiry,
-                                       TwoFactorCode = u.TwoFactorCode,
-                                       TwoFactorCodeExpiry = u.TwoFactorCodeExpiry,
-                                       Phone = u.Phone
-                                   }).FirstOrDefaultAsync() ?? new UserViewModel();
-
-                }
-            }
-            catch (Exception)
-            {
-
-            }
-            return model;
-        }
-
-        public async Task<bool> UpdatePasswordForUser(int UserID, string Password)
-        {
-            bool retresult = false;
-            try
-            {
-                var entity = await _Db.Users.Where(x => x.Id == UserID && x.IsActive && !x.IsDeleted).FirstOrDefaultAsync();
-
-                if (entity != null)
-                {
-                    entity.Password = await _Utility.Encrypt(Password);
-
-                    _Db.Users.Update(entity);
-                    await _Db.SaveChangesAsync();
-                    retresult = true;
-                }
+                return true;
             }
             catch (Exception ex)
             {
-
+                _logger.LogError(ex, "Failed to save reset token for user {UserId}.", userId);
+                return false;
             }
-            return retresult;
         }
+
+
+        public async Task<UserViewModel> GetUserDetailByGUID(string guid)
+        {
+            if (string.IsNullOrEmpty(guid))
+            {
+                return new UserViewModel();
+            }
+
+            // Enforce expiry: a token is only valid if it hasn't expired.
+            var model = await (from u in _Db.Users
+                               where !u.IsDeleted
+                                     && u.ResetPasswordToken == guid
+                                     && u.ResetPasswordTokenExpiry != null
+                                     && u.ResetPasswordTokenExpiry >= DateTime.UtcNow
+                               select new UserViewModel
+                               {
+                                   Id = u.Id,
+                                   UserId = u.Id,
+                                   Firstname = u.Firstname ?? string.Empty,
+                                   Lastname = u.Lastname ?? string.Empty,
+                                   Email = u.Email ?? string.Empty,
+                                   Username = u.Username ?? string.Empty,
+                                   RoleId = u.RoleId,
+                                   Rolename = u.Role.Rolename,
+                                   Phone = u.Phone
+                               }).FirstOrDefaultAsync();
+
+            return model ?? new UserViewModel();
+        }
+
+
+        public async Task<bool> UpdatePasswordForUser(int userId, string newPassword)
+        {
+            try
+            {
+                var user = await _Db.Users
+                    .FirstOrDefaultAsync(u => u.Id == userId && u.IsActive && !u.IsDeleted);
+
+                if (user == null)
+                {
+                    return false;
+                }
+
+                user.Password = _passwordHasher.HashPassword(newPassword);
+
+                // Invalidate the reset token once the password has been changed,
+                // so the same reset link can't be reused.
+                user.ResetPasswordToken = null;
+                user.ResetPasswordTokenExpiry = null;
+
+                await _Db.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to update password for user {UserId}.", userId);
+                return false;
+            }
+        }
+
 
         private void SetUserDataToSession(UserViewModel model)
         {
@@ -191,26 +221,20 @@ namespace Nova.Web.Models
         }
 
 
-        public async Task<Boolean> CheckPassword(int? userid, string password)
+        public async Task<bool> CheckPassword(int? userId, string password)
         {
-            Boolean retresult = false;
-            try
+            if (userId is null or <= 0)
             {
-                string encryptedPassword = await _Utility.Encrypt(password);
-                var entity = (from u in _Db.Users
-                              where (u.Id == userid && u.Password == encryptedPassword)
-                              select new { u }).FirstOrDefault();
-                if (entity != null)
-                {
-                    retresult = true;
-                }
+                return false;
             }
-            catch (Exception Ex)
-            {
-                // WriteLog("HealthGauge.Web.Models.UserModel - UpdatepasswordforUser", Ex.Message);
-            }
-            return retresult;
+
+            var user = await _Db.Users
+                .FirstOrDefaultAsync(u => u.Id == userId && !u.IsDeleted);
+
+            return user != null && _passwordHasher.VerifyPassword(user.Password, password, out _);
         }
+
+
         public async Task<List<UserViewModel>> GetAllUsersList(UserViewModel UVM)
         {
             List<UserViewModel> _List = new List<UserViewModel>();
@@ -456,54 +480,77 @@ namespace Nova.Web.Models
 
         public async Task<bool> Generate2FACode(int id)
         {
-            bool Result = false;
             try
             {
-                var UserDetails = await GetUserDetailByUserID(id);
-                if (UserDetails != null)
+                var user = await _Db.Users.FirstOrDefaultAsync(u => u.Id == id && u.IsActive && !u.IsDeleted);
+                if (user == null)
                 {
-                    UserDetails.TwoFactorCode = new Random().Next(100000, 999999).ToString();
-                    UserDetails.TwoFactorCodeExpiry = DateTime.Now.AddMinutes(5);
-
-                    await UpdateUser(UserDetails);
-
-                    Dictionary<string, string> objDict = new Dictionary<string, string>();
-                    objDict.Add("Pseudo", UserDetails.Firstname);
-                    objDict.Add("2FACode", UserDetails.TwoFactorCode);
-
-                    await _Utility.SendEmailAsync("Nova Asset Management - 2FA Code", UserDetails.Email, "2FA.html", objDict);
-
-                    Result = true;
+                    return false;
                 }
+
+                // Cryptographically-strong 6-digit code (Random is not suitable for security tokens).
+                string code = System.Security.Cryptography.RandomNumberGenerator
+                    .GetInt32(100000, 1000000).ToString();
+
+                user.TwoFactorCode = code;
+                user.TwoFactorCodeExpiry = DateTime.UtcNow.AddMinutes(5);
+                await _Db.SaveChangesAsync();
+
+                var tokens = new Dictionary<string, string>
+                {
+                    ["Pseudo"] = user.Firstname,
+                    ["2FACode"] = code
+                };
+
+                await _Utility.SendEmailAsync("Nova Asset Management - 2FA Code", user.Email, "2FA.html", tokens);
+                return true;
             }
             catch (Exception ex)
             {
-                // Handle exception
+                _logger.LogError(ex, "Failed to generate 2FA code for user {UserId}.", id);
+                return false;
             }
-            return Result;
         }
+
 
         public async Task<bool> Check2FACode(int id, string twoFactorCode)
         {
-            bool Result = false;
-            try
+            if (string.IsNullOrWhiteSpace(twoFactorCode))
             {
-                var UserDetails = await GetUserDetailByUserID(id);
-                if (UserDetails != null && !string.IsNullOrEmpty(twoFactorCode) && !string.IsNullOrWhiteSpace(twoFactorCode))
-                {
-                    if (UserDetails.TwoFactorCode == twoFactorCode && UserDetails.TwoFactorCodeExpiry >= DateTime.Now)
-                    {
-                        SetUserDataToSession(UserDetails);
-                        Result = true;
-                    }
-                }
+                return false;
             }
-            catch (Exception ex)
-            {
 
+            var user = await _Db.Users
+                .Include(u => u.Role)
+                .FirstOrDefaultAsync(u => u.Id == id && u.IsActive && !u.IsDeleted);
+
+            if (user == null
+                || user.TwoFactorCode != twoFactorCode
+                || user.TwoFactorCodeExpiry == null
+                || user.TwoFactorCodeExpiry < DateTime.UtcNow)
+            {
+                return false;
             }
-            return Result;
+
+            // Single-use: clear the code once consumed.
+            user.TwoFactorCode = null;
+            user.TwoFactorCodeExpiry = null;
+            await _Db.SaveChangesAsync();
+
+            SetUserDataToSession(new UserViewModel
+            {
+                Id = user.Id,
+                Username = user.Username ?? string.Empty,
+                Firstname = user.Firstname ?? string.Empty,
+                Lastname = user.Lastname ?? string.Empty,
+                Email = user.Email ?? string.Empty,
+                RoleId = user.RoleId,
+                Rolename = user.Role.Rolename
+            });
+
+            return true;
         }
+
 
         public async Task<bool> StatusUpdateForUserByUserID(int userId, bool status)
         {
@@ -529,32 +576,33 @@ namespace Nova.Web.Models
 
         public async Task<bool> SaveUser(UserViewModel model)
         {
-            bool Result = false;
             try
             {
-                var entity = new Users();
-
-                entity.Firstname = model.Firstname.Trim();
-                entity.Lastname = model.Lastname.Trim();
-                entity.Email = model.Email.Trim().ToLower();
-                entity.Username = model.Username.Trim();
-                entity.Phone = model.Phone.Trim();
-                entity.RoleId = model.RoleId;
-                entity.Password = await _Utility.Encrypt(model.NewPassword);
-                entity.CreatedDate = DateTime.Now;
-                entity.CreatedBy = GetUserDataFromSession().Id;
-                entity.IsActive = true;
-                entity.IsDeleted = false;
+                var entity = new Users
+                {
+                    Firstname = model.Firstname.Trim(),
+                    Lastname = model.Lastname.Trim(),
+                    Email = model.Email.Trim().ToLower(),
+                    Username = model.Username.Trim(),
+                    Phone = model.Phone?.Trim(),
+                    RoleId = model.RoleId,
+                    Password = _passwordHasher.HashPassword(model.NewPassword),
+                    CreatedDate = DateTime.UtcNow,
+                    CreatedBy = GetUserDataFromSession().Id,
+                    IsActive = true,
+                    IsDeleted = false
+                };
 
                 _Db.Users.Add(entity);
                 await _Db.SaveChangesAsync();
-                Result = true;
+                return true;
             }
             catch (Exception ex)
             {
-
+                _logger.LogError(ex, "Failed to save new user {Username}.", model.Username);
+                return false;
             }
-            return Result;
         }
+
     }
 }

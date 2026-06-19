@@ -1,21 +1,20 @@
-﻿using Nova.Web.Models;
-using System.Runtime.CompilerServices;
-
 namespace Nova.Web.Utitlity
 {
     public interface IUtilityServices
     {
-        public void SetSessionValue(string sKey, object sValue);
-        public object GetSessionValue(string sKey);
-        public void LogOut();
+        void SetSessionValue(string sKey, object sValue);
+        object GetSessionValue(string sKey);
+        void LogOut();
 
-        public Task<string> Encrypt(string clearText);
-        public Task<string> Decrypt(string cipherText);
-        public Task<string> GetCookies(string cipherText);
-        public Task SetCookies(string key, string value, int? expireTime);
-        public Task RemoveCookies(string key);
+        // NOTE: Encrypt/Decrypt were removed. Passwords are now one-way hashed
+        // via IPasswordHasherService. No part of the app needs reversible
+        // "encryption" of credentials.
 
-        public Task<bool> SendEmailAsync(string subject, string email, string htmlMessage, Dictionary<string, string> objDict);
-        public Task<string> GetIPAddress();
+        Task<string> GetCookies(string key);
+        Task SetCookies(string key, string value, int? expireTime);
+        Task RemoveCookies(string key);
+
+        Task<bool> SendEmailAsync(string subject, string email, string htmlMessage, Dictionary<string, string> objDict);
+        Task<string> GetIPAddress();
     }
 }

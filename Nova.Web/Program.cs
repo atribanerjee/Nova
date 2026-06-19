@@ -20,7 +20,7 @@ builder.Services.AddScoped<IUserServices, UserServices>();
 builder.Services.AddScoped<IUtilityServices, UtilityServices>();
 builder.Services.AddScoped<IuserRoleService, UserRole>();
 builder.Services.AddScoped<IUserActivities, UserActivitiesModel>();
-
+builder.Services.AddScoped<IPasswordHasherService, PasswordHasherService>();
 
 builder.Services.AddHttpContextAccessor();
 
