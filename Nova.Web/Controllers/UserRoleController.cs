@@ -18,12 +18,14 @@ namespace Nova.Web.Controllers
         private IUserServices _Service;
         private IUtilityServices _Utility;
         private IuserRoleService _UserRole;
-        public UserRoleController(NovaDBContext db, IUserServices Ser, IUtilityServices Uti, IuserRoleService userRole)
+        private ILogger<UserRoleController> _logger;
+        public UserRoleController(NovaDBContext db, IUserServices Ser, IUtilityServices Uti, IuserRoleService userRole, ILogger<UserRoleController> logger)
         {
             _db = db;
             _Service = Ser;
             _Utility = Uti;
             _UserRole = userRole;
+            _logger = logger;
         }
         public IActionResult Index()
         {
@@ -38,7 +40,7 @@ namespace Nova.Web.Controllers
             {
                 string? uid = string.Empty;
                 UserRoleViewModel model = new UserRoleViewModel();
-                if (_Service.GetUserDataFromSession().Id>0)
+                if (_Service.GetUserDataFromSession().Id > 0)
                 {
                     if (TempData["SuccessMessage"] != null)
                     {
@@ -64,8 +66,7 @@ namespace Nova.Web.Controllers
             }
             catch (Exception ex)
             {
-
-
+                _logger.LogError(ex, "Failed to get role list.");
             }
 
             return View();

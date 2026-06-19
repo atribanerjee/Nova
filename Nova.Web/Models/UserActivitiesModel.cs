@@ -11,10 +11,12 @@ namespace Nova.Web.Models
     {
         public NovaDBContext _Db;
         private IUtilityServices _Utility;
-        public UserActivitiesModel(NovaDBContext Db, IUtilityServices Utility)
+        private ILogger<UserActivitiesModel> _logger;
+        public UserActivitiesModel(NovaDBContext Db, IUtilityServices Utility, ILogger<UserActivitiesModel> logger)
         {
             _Db = Db;
             _Utility = Utility;
+            _logger = logger;
         }
 
         public async Task<bool> SaveActivity(int UserId,string Description)
@@ -32,9 +34,9 @@ namespace Nova.Web.Models
                 await _Db.SaveChangesAsync();
                 return true;
             }
-            catch (Exception Ex)
+            catch (Exception ex)
             {
-
+                                _logger.LogError(ex, "Failed to save activity for user {UserId}.", UserId);
             }
             return false;
         }
@@ -75,9 +77,9 @@ namespace Nova.Web.Models
                                    }).ToListAsync();
                 }
             }
-            catch (Exception Ex)
+            catch (Exception ex)
             {
-                //WriteLog("HealthGauge.Web.Models.UserModel - GetAllUsersList", Ex.Message);
+                _logger.LogError(ex, "Failed to get user activities for user {UserId}.", UserId);
             }
             return _List;
         }

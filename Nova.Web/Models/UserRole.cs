@@ -11,10 +11,12 @@ namespace Nova.Web.Models
     {
         public NovaDBContext _Db;
         private IUtilityServices _Utility;
-        public UserRole(NovaDBContext Db, IUtilityServices Utility)
+        private ILogger<UserRole> _logger;
+        public UserRole(NovaDBContext Db, IUtilityServices Utility, ILogger<UserRole> logger)
         {
             _Db = Db;
             _Utility = Utility;
+            _logger = logger;
         }
         public async Task<List<UserRoleViewModel>> GetAllRoleList(UserRoleViewModel UVM, string searchvalue)
         {
@@ -45,9 +47,9 @@ namespace Nova.Web.Models
                                                   }).ToList());
                 }
             }
-            catch (Exception Ex)
+            catch (Exception ex)
             {
-                //WriteLog("HealthGauge.Web.Models.UserModel - GetAllUsersList", Ex.Message);
+                _logger.LogError(ex, "Failed to get all role list for search value {SearchValue}.", searchvalue);
             }
             return _List;
         }
@@ -68,9 +70,9 @@ namespace Nova.Web.Models
                     }
                 }
             }
-            catch (Exception Ex)
+            catch (Exception ex)
             {
-                
+                _logger.LogError(ex, "Failed to check duplicate role name for role {RoleName}.", RoleName);
             }
 
             return false;
@@ -91,8 +93,9 @@ namespace Nova.Web.Models
                     Result = true;
                 }
             }
-            catch (Exception Ex)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to add new role with name {RoleName}.", model.Rolename);
             }
 
             return Result;
@@ -116,9 +119,9 @@ namespace Nova.Web.Models
                     }
                 }
             }
-            catch (Exception Ex)
+            catch (Exception ex)
             {
-                //WriteLog("HealthGauge.Web.Models.RoleModel - CheckDuplicateRoleName", Ex.Message);
+                _logger.LogError(ex, "Failed to check duplicate role name for role {RoleName}.", RoleName);
             }
 
             return false;
@@ -136,9 +139,9 @@ namespace Nova.Web.Models
                     model.IsDeleted = Entity.IsDeleted;
                 }
             }
-            catch (Exception Ex)
+            catch (Exception ex)
             {
-                // WriteLog("HealthGauge.Web.Models.RoleModel - GetRoleDetailByID", Ex.Message);
+                _logger.LogError(ex, "Failed to get role detail by ID {RoleID}.", RoleID);
             }
             return model;
         }
@@ -162,9 +165,9 @@ namespace Nova.Web.Models
                     }
                 }
             }
-            catch (Exception Ex)
+            catch (Exception ex)
             {
-               // WriteLog("HealthGauge.Web.Models.RoleModel - GetRoleDetailByID", Ex.Message);
+                _logger.LogError(ex, "Failed to update role with ID {RoleID}.", model.Id);
             }
 
             return Result;
@@ -185,9 +188,9 @@ namespace Nova.Web.Models
                     Result = true;
                 }
             }
-            catch (Exception Ex)
+            catch (Exception ex)
             {
-                // WriteLog("HealthGauge.Web.Models.RoleModel - DeleteStorebyID", Ex.Message);
+                _logger.LogError(ex, "Failed to delete role with ID {RoleID}.", ID);
             }
 
             return Result;
@@ -206,9 +209,9 @@ namespace Nova.Web.Models
                              Text = r.Rolename
                          }).ToListAsync();
             }
-            catch (Exception Ex)
+            catch (Exception ex)
             {
-                
+                _logger.LogError(ex, "Failed to get all role list as dropdown.");
             }
             return _List;
         }
