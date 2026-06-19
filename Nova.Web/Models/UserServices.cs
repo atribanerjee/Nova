@@ -214,7 +214,7 @@ namespace Nova.Web.Models
             }
             catch (Exception ex)
             {
-
+                _logger.LogError(ex, "Failed to read user data from session.");
             }
 
             return model;
@@ -569,7 +569,7 @@ namespace Nova.Web.Models
             }
             catch (Exception ex)
             {
-
+                _logger.LogError(ex, "Failed to update active status for user {UserId}.", userId);
             }
             return Result;
         }
