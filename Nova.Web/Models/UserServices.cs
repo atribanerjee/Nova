@@ -85,9 +85,9 @@ namespace Nova.Web.Models
                     UVM = new UserViewModel();
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // Handle exception
+                _logger.LogError(ex, "Failed to check if email exists for EmailID {EmailID}.", EmailID);
             }
             return UVM;
         }
@@ -194,7 +194,7 @@ namespace Nova.Web.Models
             }
             catch (Exception ex)
             {
-
+                _logger.LogError(ex, "Failed to set user data to session for user {UserId}.", model.Id);
             }
         }
 
@@ -265,9 +265,9 @@ namespace Nova.Web.Models
                                }).ToListAsync();
 
             }
-            catch (Exception Ex)
+            catch (Exception ex)
             {
-                // Handle exception
+                _logger.LogError(ex, "Failed to retrieve all users list.");
             }
 
             return _List;
@@ -306,7 +306,7 @@ namespace Nova.Web.Models
             }
             catch (Exception ex)
             {
-                // Handle exception
+                _logger.LogError(ex, "Failed to retrieve user details for user ID {UserID}.", UserID);
             }
             return model;
         }
@@ -342,9 +342,9 @@ namespace Nova.Web.Models
                     result = true;
                 }
             }
-            catch (Exception Ex)
+            catch (Exception ex)
             {
-
+                _logger.LogError(ex, "Failed to check duplicate email for EmailID {EmailID} and UserID {UserID}.", EmailID, userid);
             }
             return result;
         }
@@ -381,9 +381,9 @@ namespace Nova.Web.Models
                     result = true;
                 }
             }
-            catch (Exception Ex)
+            catch (Exception ex)
             {
-                // Handle exception
+                _logger.LogError(ex, "Failed to check duplicate username for Username {Username} and UserID {UserID}.", userName, userid);
             }
             return result;
         }
@@ -439,9 +439,9 @@ namespace Nova.Web.Models
 
                 }
             }
-            catch (Exception Ex)
+            catch (Exception ex)
             {
-                // Handle exception
+                _logger.LogError(ex, "Failed to update user with ID {UserID}.", model.Id);
             }
             return userid;
         }
@@ -460,9 +460,9 @@ namespace Nova.Web.Models
                     Result = true;
                 }
             }
-            catch (Exception Ex)
+            catch (Exception ex)
             {
-                // WriteLog("HealthGauge.Web.Models.UserModel - DeleteUserByUserID", Ex.Message);
+                _logger.LogError(ex, "Failed to delete user with ID {UserID}.", UserID);
             }
             return Result;
         }
@@ -474,7 +474,7 @@ namespace Nova.Web.Models
             }
             catch (Exception ex)
             {
-
+                _logger.LogError(ex, "Failed to log out user.");
             }
         }
 
