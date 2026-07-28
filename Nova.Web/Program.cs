@@ -1,12 +1,23 @@
+using log4net;
+using log4net.Config;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using Nova.DB;
 using Nova.DB.Utitlity;
 using Nova.Web.Interfaces;
+using Nova.Web.Logging;
 using Nova.Web.Models;
 using Nova.Web.Utitlity;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Wire up log4net as the logging backend for every ILogger<T> already injected
+// throughout the app (controllers, services). Config lives in log4net.config.
+var log4netRepository = LogManager.CreateRepository("NovaWebLogRepository");
+XmlConfigurator.Configure(log4netRepository, new FileInfo(Path.Combine(builder.Environment.ContentRootPath, "log4net.config")));
+
+builder.Logging.ClearProviders();
+builder.Logging.AddProvider(new Log4NetLoggerProvider(log4netRepository));
 
 // Configure DbContext with connection string
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");

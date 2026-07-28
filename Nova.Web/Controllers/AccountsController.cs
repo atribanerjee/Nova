@@ -22,14 +22,16 @@ namespace Nova.Web.Controllers
         private IUtilityServices _Utility;
         private IUserActivities _UserActivities;
         private IuserRoleService _userRoleService;
+        private readonly ILogger<AccountsController> _logger;
 
-        public AccountsController(NovaDBContext db, IUserServices Ser, IUtilityServices Uti, IUserActivities userActivities, IuserRoleService iuserRoleService)
+        public AccountsController(NovaDBContext db, IUserServices Ser, IUtilityServices Uti, IUserActivities userActivities, IuserRoleService iuserRoleService, ILogger<AccountsController> logger)
         {
             _db = db;
             _Service = Ser;
             _Utility = Uti;
             _UserActivities = userActivities;
             _userRoleService = iuserRoleService;
+            _logger = logger;
         }
 
         [HttpGet]
@@ -90,14 +92,17 @@ namespace Nova.Web.Controllers
 
                     await _Service.Generate2FACode(UVM.Id);
                     await _UserActivities.SaveActivity(UVM.Id, "User trying to log in from IP - " + await _Utility.GetIPAddress() + " with valid credentials and asked for 2FA OTP");
+                    _logger.LogInformation("User {UserId} passed credential check from IP {IPAddress}; 2FA code sent.", UVM.Id, await _Utility.GetIPAddress());
                     return Json(new { result = true, url = "", id = UVM.Id, message = "Success! We’ve sent a One-Time Password (OTP) to your registered email. Please enter the code within the next 5 minutes to complete your login process." });
                 }
                 else
                 {
+                    _logger.LogWarning("Failed login attempt for username {Username} from IP {IPAddress}.", model.Username, await _Utility.GetIPAddress());
                     TempData["ErrorMessage"] = "Invalid username or password";
                     return Json(new { url = Url.Action("Login", "Accounts") });
                 }
             }
+            _logger.LogWarning("Login submission failed model validation for username {Username}.", model.Username);
             TempData["ErrorMessage"] = "Invalid username or password";
             return Json(new { url = Url.Action("Login", "Accounts") });
 
@@ -117,9 +122,11 @@ namespace Nova.Web.Controllers
                     if (await _Service.Check2FACode(model.Id, model.TwoFactorCode))
                     {
                         await _UserActivities.SaveActivity(model.Id, "User logged in successfully from IP - " + await _Utility.GetIPAddress());
+                        _logger.LogInformation("User {UserId} completed 2FA and logged in from IP {IPAddress}.", model.Id, await _Utility.GetIPAddress());
 
                         return Json(new { url = Url.Action("UserList", "Accounts") });
                     }
+                    _logger.LogWarning("Invalid or expired 2FA code submitted for user {UserId}.", model.Id);
                 }
             }
             TempData["ErrorMessage"] = "Invalid One-Time Password (OTP)";
@@ -129,7 +136,9 @@ namespace Nova.Web.Controllers
         [SessionAuthorize("")]
         public async Task<IActionResult> LogOut()
         {
-            await _UserActivities.SaveActivity(_Service.GetUserDataFromSession().Id, "User log out successfully from IP - " + await _Utility.GetIPAddress());
+            var userId = _Service.GetUserDataFromSession().Id;
+            await _UserActivities.SaveActivity(userId, "User log out successfully from IP - " + await _Utility.GetIPAddress());
+            _logger.LogInformation("User {UserId} logged out from IP {IPAddress}.", userId, await _Utility.GetIPAddress());
 
             _Service.LogOut();
 
@@ -165,6 +174,7 @@ namespace Nova.Web.Controllers
                         }
                         else
                         {
+                            _logger.LogWarning("Failed to send username-reminder email to {Email}.", model.Email);
                             TempData["SuccessMessage"] = "Email sending is failed.";
                         }
                     }
@@ -188,10 +198,12 @@ namespace Nova.Web.Controllers
                         }
                         else
                         {
+                            _logger.LogWarning("Failed to send password-reset email to {Email}.", model.Email);
                             TempData["SuccessMessage"] = "Email sending is failed.";
                         }
 
                         bool Saveguidornot = await _Service.SaveGuid(guid.ToString(), lvm.Id);
+                        _logger.LogInformation("Password-reset requested for user {UserId} ({Email}).", lvm.Id, model.Email);
                         TempData["IsShowVerification"] = "true";
                     }
                     return Json(new { url = Url.Action("Login", "Accounts") });
@@ -245,11 +257,12 @@ namespace Nova.Web.Controllers
                         TempData["SuccessMessage"] = "Your Password has not changed";
                     }
 
-
+                    _logger.LogInformation("Password reset completed via reset link for user {UserId}.", model.UserId);
                     return RedirectToAction("Login", "Accounts");
                 }
                 else
                 {
+                    _logger.LogWarning("Password reset via reset link failed for user {UserId}.", model.UserId);
                     ViewBag.ErrorMessage = "Reset Password failed";
                     return View(model);
                 }
@@ -380,6 +393,7 @@ namespace Nova.Web.Controllers
                 }
                 if (!checkduplicateemail && !checkduplicateusername && await _Service.SaveUser(model))
                 {
+                    _logger.LogInformation("New user {Username} created by user {AdminUserId}.", model.Username, _Service.GetUserDataFromSession().Id);
                     return RedirectToAction("UserList", "Accounts");
                 }
             }
@@ -418,6 +432,7 @@ namespace Nova.Web.Controllers
                 if (!checkduplicateemail && !checkduplicateusername)
                 {
                     id = await _Service.UpdateUser(model);
+                    _logger.LogInformation("User {UserId} updated by user {AdminUserId}.", model.Id, userid);
                     return RedirectToAction("UserList", "Accounts");
                 }
                 else
@@ -447,10 +462,12 @@ namespace Nova.Web.Controllers
         {
             if (await _Service.DeleteUserByUserID(UserId))
             {
+                _logger.LogInformation("User {UserId} deleted by user {AdminUserId}.", UserId, _Service.GetUserDataFromSession().Id);
                 return Json(new { Result = true, Message = "User deleted successfully." });
             }
             else
             {
+                _logger.LogWarning("Failed to delete user {UserId}.", UserId);
                 return Json(new { Result = false, Message = "User delete has failed." });
             }
 
@@ -463,6 +480,7 @@ namespace Nova.Web.Controllers
         {
             if (await _Service.StatusUpdateForUserByUserID(UserId, status))
             {
+                _logger.LogInformation("User {UserId} status set to {Status} by user {AdminUserId}.", UserId, status ? "Active" : "Suspended", _Service.GetUserDataFromSession().Id);
                 if (!status)
                 {
                     TempData["SuccessMessage"] = "User suspendeded successfully.";
@@ -476,6 +494,7 @@ namespace Nova.Web.Controllers
             }
             else
             {
+                _logger.LogWarning("Failed to update status for user {UserId}.", UserId);
                 if (!status)
                 {
                     TempData["SuccessMessage"] = "User suspend has failed.";

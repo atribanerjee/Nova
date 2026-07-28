@@ -28,6 +28,9 @@ public class HomeController : Controller
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult Error()
     {
-        return View(new Nova.Web.ViewModels.ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+        var requestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier;
+        var exception = HttpContext.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>()?.Error;
+        _logger.LogError(exception, "Unhandled exception surfaced to error page. RequestId {RequestId}.", requestId);
+        return View(new Nova.Web.ViewModels.ErrorViewModel { RequestId = requestId });
     }
 }

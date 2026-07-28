@@ -141,6 +141,7 @@ namespace Nova.Web.Controllers
                 {
                     if (await _UserRole.AddNewRole(model))
                     {
+                        _logger.LogInformation("Role {RoleName} created by user {UserId}.", RoleName, _Service.GetUserDataFromSession().Id);
                         return Ok(new { Result = true, Message = "Role saved." });
                         //  return Json(new { Result = true, Message = "Role saved." }, new Newtonsoft.Json.JsonSerializerSettings());
                         // return Json(new { Result = true, Message = "Role saved." });
@@ -148,6 +149,7 @@ namespace Nova.Web.Controllers
 
                     else
                     {
+                        _logger.LogWarning("Failed to save role {RoleName}.", RoleName);
                         //return Json(new { Result = false, Message = "Role saving failed." }, new Newtonsoft.Json.JsonSerializerSettings());
                         //  return Json(new { Result = false, Message = "Role saving failed." });
                         return Ok(new { Result = false, Message = "Role saving failed." });
@@ -188,11 +190,13 @@ namespace Nova.Web.Controllers
 
                 if (await _UserRole.UpdateRole(model))
                 {
+                    _logger.LogInformation("Role {RoleId} updated to name {RoleName} by user {UserId}.", RoleID, RoleName, _Service.GetUserDataFromSession().Id);
                     return Ok(new { Result = true, Message = "Role updated." });
                 }
 
                 else
                 {
+                    _logger.LogWarning("Failed to update role {RoleId}.", RoleID);
                     return Ok(new { Result = false, Message = "Role  update failed." });
                 }
 
@@ -245,10 +249,12 @@ namespace Nova.Web.Controllers
         {
             if (await _UserRole.DeleteRolebyID(ID))
             {
+                _logger.LogInformation("Role {RoleId} deleted by user {UserId}.", ID, _Service.GetUserDataFromSession().Id);
                 return Ok(new { Result = true, Message = "Role deleted successfully." });
             }
             else
             {
+                _logger.LogWarning("Failed to delete role {RoleId}.", ID);
                 return Ok(new { Result = true, Message = "Role delete failed." });
             }
 
